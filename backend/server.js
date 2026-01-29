@@ -1,0 +1,407 @@
+require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const cors = require('cors');
+const mysql = require('mysql2/promise');
+const multer = require('multer');
+const pdf = require('pdf-extraction');
+const jwt = require('jsonwebtoken');
+const express = require('express');
+const nodemailer = require('nodemailer');
+const cron = require('node-cron');
+
+// --- IMPORTS AWS S3 ---
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const multerS3 = require('multer-s3');
+
+console.log("⏳ Iniciando configurações do servidor...");
+
+const app = express();
+const port = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'seguradora_chave_secreta_super_segura_2024';
+
+// ==================================================
+// ☁️ CONFIGURAÇÃO S3 (AWS)
+// ==================================================
+let uploadS3; 
+let uploadMemory; 
+let s3Client; 
+
+try {
+    s3Client = new S3Client({
+        region: process.env.AWS_REGION,
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        }
+    });
+
+    uploadS3 = multer({
+        storage: multerS3({
+            s3: s3Client,
+            bucket: process.env.AWS_BUCKET_NAME,
+            contentType: multerS3.AUTO_CONTENT_TYPE,
+            key: function (req, file, cb) {
+                const cleanName = file.originalname.replace(/\s+/g, '-').replace(/[^\w.-]/g, '');
+                cb(null, Date.now().toString() + '-' + cleanName);
+            }
+        })
+    });
+
+    uploadMemory = multer({ storage: multer.memoryStorage() });
+    console.log("✅ AWS S3 Configurado com sucesso!");
+
+} catch (err) {
+    console.error("❌ Erro ao configurar AWS S3:", err.message);
+    const storageDisk = multer.diskStorage({
+        destination: (req, file, cb) => cb(null, 'uploads/'),
+        filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    });
+    uploadS3 = multer({ storage: storageDisk });
+    uploadMemory = multer({ storage: storageDisk });
+}
+
+// ==================================================
+// 📧 CONFIGURAÇÃO DE E-MAIL
+// ==================================================
+let transporter;
+async function configurarEmail() {
+    if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT || 587,
+            secure: false,
+            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+        });
+    } else {
+        const testAccount = await nodemailer.createTestAccount();
+        transporter = nodemailer.createTransport({
+            host: "smtp.ethereal.email", port: 587, secure: false,
+            auth: { user: testAccount.user, pass: testAccount.pass },
+        });
+    }
+}
+configurarEmail();
+
+async function enviarNotificacao(para, assunto, texto) {
+    if (!transporter) return;
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL_FROM || '"Seguradora System" <sistema@seguradora.com>',
+            to: para, subject: assunto, text: texto
+        });
+    } catch (erro) { console.error(`❌ Falha envio email:`, erro.message); }
+}
+
+// ==================================================
+// 🚨 MIDDLEWARES
+// ==================================================
+app.use(express.json());
+app.use(cors());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, '../')));
+
+app.get(['/', '/index.html', '/login'], (req, res) => {
+    const caminhoIndex = path.join(__dirname, '../index.html');
+    res.sendFile(caminhoIndex, (err) => { if(err) res.status(404).send("Index não encontrado."); });
+});
+
+// ==================================================
+// 🛢️ BANCO DE DADOS
+// ==================================================
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
+    ssl: { rejectUnauthorized: false }, 
+    waitForConnections: true, connectionLimit: 5, queueLimit: 0
+});
+
+// ==================================================
+// 🔐 HELPERS
+// ==================================================
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401);
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+}
+const safeCurrency = (v) => {
+    if (!v) return 0.00;
+    let str = v.toString();
+    if (str.includes(',')) str = str.replace(/[^\d,-]/g, '').replace(',', '.');
+    else str = str.replace(/[^\d.-]/g, '');
+    return isNaN(parseFloat(str)) ? 0.00 : parseFloat(str);
+};
+const safeInt = (v) => { if (!v || v === '' || v === 'null') return null; return isNaN(parseInt(v)) ? null : parseInt(v); };
+
+// ==================================================
+// 🌐 ROTAS PÚBLICAS
+// ==================================================
+app.get('/redefinir.html', (req, res) => {
+    let caminhoArquivo = path.join(__dirname, 'redefinir.html');
+    if (!fs.existsSync(caminhoArquivo)) caminhoArquivo = path.join(__dirname, '../redefinir.html');
+    res.sendFile(caminhoArquivo);
+});
+
+app.post('/login', async (req, res) => {
+    try {
+        const { email, senha } = req.body;
+        const [rows] = await pool.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+        if (rows.length === 0) return res.status(401).json({ message: "Usuário não encontrado." });
+        const usuario = rows[0];
+        if (senha !== usuario.senha) return res.status(401).json({ message: "Senha incorreta." });
+        const token = jwt.sign({ id: usuario.id, email: usuario.email, tipo: usuario.tipo }, JWT_SECRET, { expiresIn: '24h' });
+        res.json({ auth: true, token: token, usuario: { nome: usuario.nome, tipo: usuario.tipo } });
+    } catch (error) { res.status(500).json({ message: "Erro interno." }); }
+});
+
+app.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const [rows] = await pool.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+        if (rows.length === 0) return res.status(200).json({ message: "Instruções enviadas." });
+        const usuario = rows[0];
+        const secret = JWT_SECRET + usuario.senha;
+        const token = jwt.sign({ id: usuario.id, email: usuario.email }, secret, { expiresIn: '1h' });
+        const baseUrl = process.env.BASE_URL || 'http://localhost:3000'; 
+        const link = `${baseUrl}/redefinir.html?id=${usuario.id}&token=${token}`;
+        await enviarNotificacao(email, "Redefinição de Senha 🔐", `Link: ${link}`);
+        res.json({ message: "Instruções enviadas." });
+    } catch (error) { res.status(500).json({ message: "Erro processar." }); }
+});
+
+app.post('/reset-password', async (req, res) => {
+    try {
+        const { id, token, novaSenha } = req.body;
+        const [rows] = await pool.query('SELECT * FROM usuarios WHERE id = ?', [id]);
+        if (rows.length === 0) return res.status(404).json({ message: "Inválido." });
+        const usuario = rows[0];
+        const secret = JWT_SECRET + usuario.senha;
+        try {
+            jwt.verify(token, secret);
+            await pool.query('UPDATE usuarios SET senha = ? WHERE id = ?', [novaSenha, id]);
+            res.json({ message: "Sucesso." });
+        } catch (err) { return res.status(400).json({ message: "Expirado." }); }
+    } catch (error) { res.status(500).json({ message: "Erro interno." }); }
+});
+
+// ==================================================
+// 👤 GESTÃO DE USUÁRIOS
+// ==================================================
+app.post('/registrar', authenticateToken, async (req, res) => {
+    try {
+        const { nome, email, senha, tipo } = req.body;
+        await pool.query('INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)', [nome, email, senha, tipo]);
+        res.status(201).json({ message: "Usuário criado" });
+    } catch (e) { res.status(500).json({ message: e.message }); }
+});
+app.get('/usuarios', authenticateToken, async (req, res) => {
+    try { const [rows] = await pool.query('SELECT id, nome, email, tipo FROM usuarios'); res.json(rows); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get('/usuarios/:id', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT id, nome, email, tipo FROM usuarios WHERE id = ?', [req.params.id]);
+        if (rows.length > 0) res.json(rows[0]); else res.status(404).json({ message: "Não encontrado" });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put('/usuarios/:id', authenticateToken, async (req, res) => {
+    try {
+        const { nome, email, senha, tipo } = req.body;
+        if (senha && senha.trim() !== '') {
+            await pool.query('UPDATE usuarios SET nome=?, email=?, senha=?, tipo=? WHERE id=?', [nome, email, senha, tipo, req.params.id]);
+        } else {
+            await pool.query('UPDATE usuarios SET nome=?, email=?, tipo=? WHERE id=?', [nome, email, tipo, req.params.id]);
+        }
+        res.json({ message: "Atualizado" });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/usuarios/:id', authenticateToken, async (req, res) => {
+    try { await pool.query('DELETE FROM usuarios WHERE id = ?', [req.params.id]); res.json({ message: "Excluído" }); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ==================================================
+// 📊 DASHBOARD
+// ==================================================
+app.get('/dashboard/comissoes', authenticateToken, async (req, res) => {
+    try {
+        const usuarioId = req.user.id;
+        const [rows] = await pool.query(`SELECT SUM(valor_comissao) as total FROM apolices WHERE usuario_id = ? AND status = 'EMITIDA'`, [usuarioId]);
+        res.json({ totalComissoes: rows[0].total || 0 });
+    } catch (e) { res.status(500).json({ message: "Erro comissões" }); }
+});
+app.get('/dashboard-resumo', authenticateToken, async (req, res) => {
+    try {
+        const [a] = await pool.query('SELECT COUNT(*) as total FROM apolices');
+        const [u] = await pool.query('SELECT COUNT(*) as total FROM usuarios');
+        const [v] = await pool.query('SELECT COUNT(*) as total FROM propostas');
+        const [c] = await pool.query('SELECT COUNT(DISTINCT nome) as total FROM propostas');
+        res.json({ apolices: a[0].total, usuarios: u[0].total, veiculos: v[0].total, clientes: c[0].total });
+    } catch (e) { res.status(500).json({ message: "Erro stats" }); }
+});
+app.get('/dashboard-graficos', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT vigencia_fim, vigencia_inicio, premio_liquido, premio_total FROM apolices');
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        let statusStats = { vigente: 0, vencida: 0, avencer: 0 };
+        let financeiro = {}; 
+        rows.forEach(r => {
+            if (r.vigencia_fim) {
+                let dFim = new Date(r.vigencia_fim);
+                if (typeof r.vigencia_fim === 'string') dFim = new Date(r.vigencia_fim.split('T')[0]);
+                const diffDays = Math.ceil((dFim - hoje) / (1000 * 60 * 60 * 24));
+                if (diffDays < 0) statusStats.vencida++; else if (diffDays <= 30) statusStats.avencer++; else statusStats.vigente++;
+            }
+            if (r.vigencia_inicio) {
+                let dInicio = new Date(r.vigencia_inicio);
+                if (typeof r.vigencia_inicio === 'string') dInicio = new Date(r.vigencia_inicio.split('T')[0]);
+                const anoMes = `${dInicio.getFullYear()}-${String(dInicio.getMonth() + 1).padStart(2, '0')}`;
+                let valor = parseFloat(r.premio_total) || 0;
+                if (!financeiro[anoMes]) financeiro[anoMes] = 0;
+                financeiro[anoMes] += valor;
+            }
+        });
+        const labels = Object.keys(financeiro).sort();
+        res.json({ status: [statusStats.vigente, statusStats.avencer, statusStats.vencida], vendas: { labels: labels, valores: labels.map(k => financeiro[k]) } });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ==================================================
+// 📄 PDF SEGURO S3
+// ==================================================
+app.get('/apolices/:id/pdf-seguro', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT arquivo_pdf FROM apolices WHERE id = ?', [req.params.id]);
+        if (rows.length === 0 || !rows[0].arquivo_pdf) return res.status(404).json({ message: "Arquivo não encontrado." });
+        const arquivo = rows[0].arquivo_pdf;
+        if (!arquivo.startsWith('http')) return res.json({ url: `/uploads/${arquivo}` });
+
+        if (s3Client) {
+            try {
+                const urlObj = new URL(arquivo);
+                let key = decodeURIComponent(urlObj.pathname.substring(1));
+                const command = new GetObjectCommand({ Bucket: process.env.AWS_BUCKET_NAME, Key: key });
+                const urlAssinada = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+                return res.json({ url: urlAssinada });
+            } catch (urlError) { return res.json({ url: arquivo }); }
+        } else { return res.json({ url: arquivo }); }
+    } catch (e) { console.error("Erro link:", e); res.status(500).json({ message: "Erro ao gerar link." }); }
+});
+
+// ==================================================
+// 📄 CRUD APÓLICES (COM REPASSE E COMISSÃO)
+// ==================================================
+app.get('/apolices', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.query(`SELECT a.*, p.nome as cliente_nome, p.placa as veiculo_placa FROM apolices a LEFT JOIN propostas p ON a.veiculo_id = p.id ORDER BY a.id DESC`);
+        const fmt = rows.map(r => ({...r, cliente: r.cliente_nome || 'Excluído', placa: r.veiculo_placa || 'S/Placa'}));
+        res.json(fmt);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get('/apolices/:id', authenticateToken, async (req, res) => {
+    try { const [rows] = await pool.query('SELECT * FROM apolices WHERE id = ?', [req.params.id]); if(rows.length>0) res.json(rows[0]); else res.status(404).json({message:"Ñ encontrado"}); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// CADASTRAR APÓLICE (COM VALOR_REPASSE)
+app.post('/cadastrar-apolice', authenticateToken, uploadS3.any(), async (req, res) => {
+    try {
+        const arquivo = (req.files && req.files.length > 0) ? req.files[0] : null;
+        const linkArquivo = arquivo ? (arquivo.location || arquivo.filename) : null;
+        const d = req.body;
+        const idVeiculo = safeInt(d.veiculo_id);
+        const usuarioId = req.user.id;
+        
+        // Query com VALOR_REPASSE
+        await pool.query(
+            `INSERT INTO apolices 
+            (numero_apolice, veiculo_id, arquivo_pdf, premio_total, premio_liquido, franquia_casco, vigencia_inicio, vigencia_fim, numero_proposta, usuario_id, valor_comissao, valor_repasse, status) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, 
+            [
+                d.numero_apolice, 
+                idVeiculo, 
+                linkArquivo, 
+                safeCurrency(d.premio_total), 
+                safeCurrency(d.premio_liquido), 
+                safeCurrency(d.franquia_casco), 
+                d.vigencia_inicio||null, 
+                d.vigencia_fim||null, 
+                d.numero_proposta, 
+                usuarioId, 
+                safeCurrency(d.valor_comissao), 
+                safeCurrency(d.valor_repasse), // Novo Campo
+                'EMITIDA'
+            ]
+        );
+        res.status(201).json({message: "Criado", link: linkArquivo});
+    } catch(e) { console.error(e); res.status(500).json({message: e.message}); }
+});
+
+// ATUALIZAR APÓLICE (COM VALOR_REPASSE)
+app.put('/apolices/:id', authenticateToken, uploadS3.any(), async (req, res) => {
+    try {
+        const d = req.body;
+        const idVeiculo = safeInt(d.veiculo_id);
+        
+        await pool.query(
+            `UPDATE apolices SET numero_apolice=?, numero_proposta=?, veiculo_id=?, premio_total=?, premio_liquido=?, franquia_casco=?, vigencia_inicio=?, vigencia_fim=?, valor_comissao=?, valor_repasse=? WHERE id=?`, 
+            [
+                d.numero_apolice, 
+                d.numero_proposta, 
+                idVeiculo, 
+                safeCurrency(d.premio_total), 
+                safeCurrency(d.premio_liquido), 
+                safeCurrency(d.franquia_casco), 
+                d.vigencia_inicio||null, 
+                d.vigencia_fim||null, 
+                safeCurrency(d.valor_comissao), 
+                safeCurrency(d.valor_repasse), // Novo Campo
+                req.params.id
+            ]
+        );
+        if (req.files && req.files.length > 0) {
+            const linkArquivo = req.files[0].location || req.files[0].filename;
+            await pool.query('UPDATE apolices SET arquivo_pdf=? WHERE id=?', [linkArquivo, req.params.id]);
+        }
+        res.status(200).json({ message: "Atualizado" });
+    } catch(e) { console.error(e); res.status(500).json({ message: e.message }); }
+});
+
+app.delete('/apolices/:id', authenticateToken, async (req, res) => {
+    try { await pool.query('DELETE FROM apolices WHERE id = ?', [req.params.id]); res.json({ message: "Excluído" }); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PROPOSTAS
+app.get('/propostas', authenticateToken, async (req, res) => { try { const [rows] = await pool.query('SELECT * FROM propostas ORDER BY id DESC'); res.json(rows); } catch (e) { res.status(500).json({ error: e.message }); }});
+app.get('/propostas/:id', authenticateToken, async (req, res) => { try { const [rows] = await pool.query('SELECT * FROM propostas WHERE id = ?', [req.params.id]); if(rows.length>0) res.json(rows[0]); else res.status(404).json({message:"Ñ encontrado"}); } catch (e) { res.status(500).json({ error: e.message }); }});
+app.post('/cadastrar-proposta', authenticateToken, async (req, res) => {
+    try { const d = req.body; await pool.query(`INSERT INTO propostas (nome, documento, email, telefone, placa, modelo, cep, endereco, bairro, cidade, uf, numero, complemento, fabricante, chassi, ano_modelo, fipe, utilizacao, blindado, kit_gas, zero_km, cep_pernoite, cobertura_casco, carro_reserva, forma_pagamento) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [d.nome, d.documento, d.email, d.telefone, d.placa, d.modelo, d.cep, d.endereco, d.bairro, d.cidade, d.uf, d.numero, d.complemento, d.fabricante, d.chassi, d.ano_modelo, d.fipe, d.utilizacao, d.blindado, d.kit_gas, d.zero_km, d.cep_pernoite, d.cobertura_casco, d.carro_reserva, d.forma_pagamento]); res.status(201).json({ message: "Criado" }); } catch(e) { res.status(500).json({message: e.message}); }
+});
+app.put('/propostas/:id', authenticateToken, async (req, res) => {
+    try { const d = req.body; await pool.query(`UPDATE propostas SET nome=?, documento=?, email=?, telefone=?, placa=?, modelo=?, cep=?, endereco=?, bairro=?, cidade=?, uf=?, numero=?, complemento=?, fabricante=?, chassi=?, ano_modelo=?, fipe=?, utilizacao=?, blindado=?, kit_gas=?, zero_km=?, cep_pernoite=?, cobertura_casco=?, carro_reserva=?, forma_pagamento=? WHERE id=?`, [d.nome, d.documento, d.email, d.telefone, d.placa, d.modelo, d.cep, d.endereco, d.bairro, d.cidade, d.uf, d.numero, d.complemento, d.fabricante, d.chassi, d.ano_modelo, d.fipe, d.utilizacao, d.blindado, d.kit_gas, d.zero_km, d.cep_pernoite, d.cobertura_casco, d.carro_reserva, d.forma_pagamento, req.params.id]); res.json({ message: "Atualizado" }); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/propostas/:id', authenticateToken, async (req, res) => { try { await pool.query('DELETE FROM propostas WHERE id = ?', [req.params.id]); res.json({ message: "Excluído" }); } catch (e) { res.status(500).json({ error: e.message }); }});
+
+app.post('/importar-pdf', authenticateToken, uploadMemory.any(), async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) return res.status(400).json({ message: "Sem arquivo." });
+        const data = await pdf(req.files[0].buffer);
+        const txt = data.text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ');
+        let dados = { premio_total: "0.00", numero_apolice: "", placa: "" };
+        const matchValor = txt.match(/(?:Prêmio Total|Valor Total).*?R?\$?\s*([\d\.,]+)/i);
+        if(matchValor) dados.premio_total = matchValor[1].replace(/\./g,'').replace(',','.');
+        const matchPlaca = txt.match(/[A-Z]{3}[0-9][0-9A-Z][0-9]{2}/i);
+        if(matchPlaca) dados.placa = matchPlaca[0].toUpperCase();
+        res.json({ mensagem: "Sucesso", dados });
+    } catch (e) { res.status(500).json({message: "Erro ao ler PDF"}); }
+});
+
+cron.schedule('0 9 * * *', async () => {});
+app.listen(port, () => { console.log(`🚀 SERVER NA PORTA ${port}`); });

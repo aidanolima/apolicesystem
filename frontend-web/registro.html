@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+    <script src="js/config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuário</title>
+    
+    <meta http-equiv="Content-Security-Policy" 
+    content="default-src * 'self' blob: data: gap:; 
+    style-src * 'self' 'unsafe-inline' blob: data: gap:; 
+    script-src * 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net blob: data: gap:; 
+    connect-src 'self' http://localhost:3000 https://seguradoraproject.onrender.com * 'unsafe-inline' blob: data: gap:;">
+    
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="dashboard-body">
+
+    <header class="app-header">
+        <div class="header-brand"><a href="dashboard.html"><img src="assets/logo.png" alt="Logo" class="header-logo"></a></div>
+        <nav class="header-nav">
+            <a href="dashboard.html" class="header-link">DASHBOARD</a>
+            <a href="apolice.html" class="header-link">APÓLICES</a>
+            <a href="registro.html" class="header-link active">USUÁRIOS</a>
+        </nav>
+        <div class="header-user-area">
+            <div class="user-info"><span class="user-name">Olá, <strong id="user-name-display">...</strong></span></div>
+            <button id="btn-logout" class="btn-logout-panel">SAIR</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div style="margin-bottom: 20px;">
+            <a href="dashboard.html" style="text-decoration: none; color: #666; font-size: 13px;">
+                <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+            </a>
+        </div>
+
+        <div class="card" style="max-width: 600px; margin: 0 auto; border-top: 4px solid #7b1fa2;">
+            <h3 id="titulo-pagina" style="color: #7b1fa2; margin-bottom: 25px;">
+                <i class="fas fa-user-plus"></i> Novo Usuário do Sistema
+            </h3>
+
+            <form id="form-registro">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Nome Completo</label>
+                    <input type="text" id="nome" placeholder="Ex: João Silva" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>E-mail Corporativo</label>
+                    <input type="email" id="email" placeholder="Ex: joao@seguradora.com" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Senha de Acesso</label>
+                        <input type="password" id="senha" placeholder="******" required>
+                        <small id="dica-senha" style="color:#666; display:none;">Deixe em branco para manter a senha atual.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Perfil de Acesso</label>
+                        <select id="tipo">
+                            <option value="padrao">Padrão (Visualizar)</option>
+                            <option value="admin">Administrador (Total)</option>
+                            <option value="ti">TI / Suporte</option> </select>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-salvar" class="btn-novo" style="background-color: #7b1fa2; margin-top: 20px;">
+                    CADASTRAR USUÁRIO
+                </button>
+            </form>
+        </div>
+        <div class="system-credits" style="text-align: center;">By Áidano Lima - ASL TECH</div>
+    </div>
+
+    <script>
+        //const API_URL = 'http://localhost:3000';
+        const token = localStorage.getItem('token');
+        
+        // Verifica se tem ID na URL (Modo Edição)
+        const urlParams = new URLSearchParams(window.location.search);
+        const idEdicao = urlParams.get('id');
+
+        // Inicialização
+        if (!token) window.location.href = 'index.html';
+        
+        const nomeLogado = localStorage.getItem('usuario_logado');
+        if(document.getElementById('user-name-display') && nomeLogado) 
+            document.getElementById('user-name-display').innerText = nomeLogado.split(' ')[0];
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.clear(); window.location.href = 'index.html';
+        });
+
+        // --- LÓGICA DE EDIÇÃO ---
+        if (idEdicao) {
+            prepararModoEdicao();
+        }
+
+        async function prepararModoEdicao() {
+            // 1. Ajustar Visual
+            document.getElementById('titulo-pagina').innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuário';
+            document.getElementById('btn-salvar').innerText = "SALVAR ALTERAÇÕES";
+            document.getElementById('senha').required = false; // Senha opcional na edição
+            document.getElementById('senha').placeholder = "(Não alterada)";
+            document.getElementById('dica-senha').style.display = 'block';
+
+            // 2. Carregar Dados
+            try {
+                const res = await fetch(`${API_URL}/usuarios/${idEdicao}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if(!res.ok) throw new Error("Erro ao buscar usuário");
+                
+                const user = await res.json();
+                
+                document.getElementById('nome').value = user.nome;
+                document.getElementById('email').value = user.email;
+                document.getElementById('tipo').value = user.tipo;
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erro', 'Não foi possível carregar os dados.', 'error');
+            }
+        }
+
+        // --- SALVAR (CRIAR OU ATUALIZAR) ---
+        document.getElementById('form-registro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const dados = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                senha: document.getElementById('senha').value,
+                tipo: document.getElementById('tipo').value
+            };
+
+            // Define URL e Método baseado no modo (Edição ou Criação)
+            const endpoint = idEdicao ? `${API_URL}/usuarios/${idEdicao}` : `${API_URL}/registrar`;
+            const method = idEdicao ? 'PUT' : 'POST';
+
+            try {
+                Swal.fire({ title: 'Salvando...', didOpen: () => Swal.showLoading() });
+                
+                const res = await fetch(endpoint, {
+                    method: method,
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                if (res.ok) {
+                    await Swal.fire('Sucesso!', idEdicao ? 'Dados atualizados.' : 'Usuário cadastrado.', 'success');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.message);
+                }
+            } catch (error) {
+                Swal.fire('Erro', error.message, 'error');
+            }
+        });
+    </script>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+
+</body>
+</html>
