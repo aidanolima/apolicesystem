@@ -18,7 +18,7 @@ const multerS3 = require('multer-s3');
 console.log("⏳ Iniciando configurações do servidor...");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000; // Render usa porta 10000 preferencialmente
 const JWT_SECRET = process.env.JWT_SECRET || 'seguradora_chave_secreta_super_segura_2024';
 
 // ==================================================
@@ -95,18 +95,44 @@ async function enviarNotificacao(para, assunto, texto) {
 }
 
 // ==================================================
-// 🚨 MIDDLEWARES
+// 🚨 MIDDLEWARES GERAIS
 // ==================================================
 app.use(express.json());
 app.use(cors());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(__dirname));
-app.use(express.static(path.join(__dirname, '../')));
 
-app.get(['/', '/index.html', '/login'], (req, res) => {
-    const caminhoIndex = path.join(__dirname, '../index.html');
-    res.sendFile(caminhoIndex, (err) => { if(err) res.status(404).send("Index não encontrado."); });
-});
+// Configuração para servir arquivos estáticos (CSS, JS, Imagens)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(__dirname)); // Serve arquivos da pasta backend
+app.use(express.static(path.join(__dirname, '../'))); // Serve arquivos da raiz (HTMLs)
+
+// ==================================================
+// 📍 ROTAS DE PÁGINAS (FRONTEND) - CORREÇÃO DO ERRO
+// ==================================================
+
+// Função para entregar arquivos HTML com segurança
+const servirPagina = (res, nomeArquivo) => {
+    // Tenta achar na raiz (../arquivo.html)
+    const caminho = path.join(__dirname, '../' + nomeArquivo);
+    res.sendFile(caminho, (err) => {
+        if (err) {
+            console.error(`Erro ao servir ${nomeArquivo}:`, err);
+            res.status(404).send(`Página ${nomeArquivo} não encontrada.`);
+        }
+    });
+};
+
+// Mapeamento manual das páginas para garantir que funcionem
+app.get('/dashboard.html', (req, res) => servirPagina(res, 'dashboard.html'));
+app.get('/apolice.html', (req, res) => servirPagina(res, 'apolice.html'));
+app.get('/registro.html', (req, res) => servirPagina(res, 'registro.html'));
+app.get('/relatorios.html', (req, res) => servirPagina(res, 'relatorios.html'));
+app.get('/cadastro.html', (req, res) => servirPagina(res, 'cadastro.html'));
+app.get('/clientes.html', (req, res) => servirPagina(res, 'clientes.html'));
+app.get('/redefinir.html', (req, res) => servirPagina(res, 'redefinir.html'));
+
+// Rota Raiz (Login)
+app.get(['/', '/index.html', '/login'], (req, res) => servirPagina(res, 'login.html'));
+
 
 // ==================================================
 // 🛢️ BANCO DE DADOS
@@ -144,13 +170,8 @@ const safeCurrency = (v) => {
 const safeInt = (v) => { if (!v || v === '' || v === 'null') return null; return isNaN(parseInt(v)) ? null : parseInt(v); };
 
 // ==================================================
-// 🌐 ROTAS PÚBLICAS
+// 🌐 ROTAS DE API (LOGIN E SENHA)
 // ==================================================
-app.get('/redefinir.html', (req, res) => {
-    let caminhoArquivo = path.join(__dirname, 'redefinir.html');
-    if (!fs.existsSync(caminhoArquivo)) caminhoArquivo = path.join(__dirname, '../redefinir.html');
-    res.sendFile(caminhoArquivo);
-});
 
 app.post('/login', async (req, res) => {
     try {
@@ -172,7 +193,7 @@ app.post('/forgot-password', async (req, res) => {
         const usuario = rows[0];
         const secret = JWT_SECRET + usuario.senha;
         const token = jwt.sign({ id: usuario.id, email: usuario.email }, secret, { expiresIn: '1h' });
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000'; 
+        const baseUrl = process.env.BASE_URL || 'https://apolicesystem.onrender.com'; // Ajustado para URL de produção
         const link = `${baseUrl}/redefinir.html?id=${usuario.id}&token=${token}`;
         await enviarNotificacao(email, "Redefinição de Senha 🔐", `Link: ${link}`);
         res.json({ message: "Instruções enviadas." });
