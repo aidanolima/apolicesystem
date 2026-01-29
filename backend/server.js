@@ -9,8 +9,6 @@ const jwt = require('jsonwebtoken');
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
-
-// --- IMPORTS AWS S3 ---
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const multerS3 = require('multer-s3');
@@ -18,7 +16,7 @@ const multerS3 = require('multer-s3');
 console.log("⏳ Iniciando configurações do servidor...");
 
 const app = express();
-const port = process.env.PORT || 10000; // Ajustado para Render
+const port = process.env.PORT || 10000;
 const JWT_SECRET = process.env.JWT_SECRET || 'seguradora_chave_secreta_super_segura_2024';
 
 // ==================================================
@@ -48,10 +46,8 @@ try {
             }
         })
     });
-
     uploadMemory = multer({ storage: multer.memoryStorage() });
     console.log("✅ AWS S3 Configurado com sucesso!");
-
 } catch (err) {
     console.error("❌ Erro ao configurar AWS S3:", err.message);
     const storageDisk = multer.diskStorage({
@@ -63,7 +59,7 @@ try {
 }
 
 // ==================================================
-// 📧 CONFIGURAÇÃO DE E-MAIL
+// 📧 E-MAIL
 // ==================================================
 let transporter;
 async function configurarEmail() {
@@ -83,7 +79,6 @@ async function configurarEmail() {
     }
 }
 configurarEmail();
-
 async function enviarNotificacao(para, assunto, texto) {
     if (!transporter) return;
     try {
@@ -95,53 +90,47 @@ async function enviarNotificacao(para, assunto, texto) {
 }
 
 // ==================================================
-// 🚨 MIDDLEWARES
+// 🚨 MIDDLEWARES & ARQUIVOS ESTÁTICOS (CORRIGIDO)
 // ==================================================
 app.use(express.json());
 app.use(cors());
 
-// Configura pastas estáticas
+// --- CORREÇÃO PRINCIPAL ---
+// Define onde estão os arquivos do site (HTML, CSS, JS)
+const frontendPath = path.join(__dirname, '../frontend-web');
+console.log("📂 Servindo arquivos de:", frontendPath);
+
+// Serve arquivos estáticos automaticamente
+app.use(express.static(frontendPath));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(__dirname)); 
-app.use(express.static(path.join(__dirname, '../'))); // Serve a raiz para CSS/JS
 
 // ==================================================
-// 📍 ROTAS OBRIGATÓRIAS (CORREÇÃO DO DASHBOARD)
+// 📍 ROTAS DE PÁGINAS (FRONTEND)
 // ==================================================
-// Isso força o servidor a entregar o arquivo correto quando a URL é acessada
-app.get('/dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dashboard.html'));
-});
+// Função auxiliar para garantir que o arquivo seja encontrado
+const servir = (res, arquivo) => {
+    res.sendFile(path.join(frontendPath, arquivo), (err) => {
+        if (err) {
+            console.error(`Erro ao abrir ${arquivo}:`, err);
+            res.status(404).send(`Erro: Página ${arquivo} não encontrada.`);
+        }
+    });
+};
 
-app.get('/apolice.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../apolice.html'));
-});
+// Rotas principais
+app.get('/', (req, res) => servir(res, 'index.html'));
+app.get('/index.html', (req, res) => servir(res, 'index.html'));
+app.get('/login', (req, res) => servir(res, 'index.html'));
 
-app.get('/registro.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../registro.html'));
-});
-
-app.get('/relatorios.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../relatorios.html'));
-});
-
-app.get('/cadastro.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../cadastro.html'));
-});
-
-app.get('/clientes.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../clientes.html'));
-});
-
-app.get('/redefinir.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../redefinir.html'));
-});
-
-// Rota raiz e Login
-app.get(['/', '/index.html', '/login'], (req, res) => {
-    const caminhoIndex = path.join(__dirname, '../index.html');
-    res.sendFile(caminhoIndex);
-});
+// Páginas do Sistema
+app.get('/dashboard.html', (req, res) => servir(res, 'dashboard.html'));
+app.get('/apolice.html', (req, res) => servir(res, 'apolice.html'));
+app.get('/registro.html', (req, res) => servir(res, 'registro.html'));
+app.get('/relatorios.html', (req, res) => servir(res, 'relatorios.html'));
+app.get('/cadastro.html', (req, res) => servir(res, 'cadastro.html'));
+app.get('/clientes.html', (req, res) => servir(res, 'clientes.html'));
+app.get('/redefinir.html', (req, res) => servir(res, 'redefinir.html'));
+app.get('/recuperar.html', (req, res) => servir(res, 'recuperar.html'));
 
 
 // ==================================================
@@ -179,11 +168,9 @@ const safeCurrency = (v) => {
 };
 const safeInt = (v) => { if (!v || v === '' || v === 'null') return null; return isNaN(parseInt(v)) ? null : parseInt(v); };
 
-
 // ==================================================
-// 🌐 API E FUNCIONALIDADES
+// 🌐 API (LOGIN E SENHAS)
 // ==================================================
-
 app.post('/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
@@ -204,7 +191,7 @@ app.post('/forgot-password', async (req, res) => {
         const usuario = rows[0];
         const secret = JWT_SECRET + usuario.senha;
         const token = jwt.sign({ id: usuario.id, email: usuario.email }, secret, { expiresIn: '1h' });
-        const baseUrl = process.env.BASE_URL || 'https://apolicesystem.onrender.com'; 
+        const baseUrl = process.env.BASE_URL || 'https://apolicesystem.onrender.com';
         const link = `${baseUrl}/redefinir.html?id=${usuario.id}&token=${token}`;
         await enviarNotificacao(email, "Redefinição de Senha 🔐", `Link: ${link}`);
         res.json({ message: "Instruções enviadas." });
@@ -307,7 +294,7 @@ app.get('/dashboard-graficos', authenticateToken, async (req, res) => {
 });
 
 // ==================================================
-// 📄 PDF SEGURO S3
+// 📄 CRUD APÓLICES & PDF
 // ==================================================
 app.get('/apolices/:id/pdf-seguro', authenticateToken, async (req, res) => {
     try {
@@ -315,7 +302,6 @@ app.get('/apolices/:id/pdf-seguro', authenticateToken, async (req, res) => {
         if (rows.length === 0 || !rows[0].arquivo_pdf) return res.status(404).json({ message: "Arquivo não encontrado." });
         const arquivo = rows[0].arquivo_pdf;
         if (!arquivo.startsWith('http')) return res.json({ url: `/uploads/${arquivo}` });
-
         if (s3Client) {
             try {
                 const urlObj = new URL(arquivo);
@@ -328,9 +314,6 @@ app.get('/apolices/:id/pdf-seguro', authenticateToken, async (req, res) => {
     } catch (e) { console.error("Erro link:", e); res.status(500).json({ message: "Erro ao gerar link." }); }
 });
 
-// ==================================================
-// 📄 CRUD APÓLICES (COM REPASSE E COMISSÃO)
-// ==================================================
 app.get('/apolices', authenticateToken, async (req, res) => {
     try {
         const [rows] = await pool.query(`SELECT a.*, p.nome as cliente_nome, p.placa as veiculo_placa FROM apolices a LEFT JOIN propostas p ON a.veiculo_id = p.id ORDER BY a.id DESC`);
@@ -341,8 +324,6 @@ app.get('/apolices', authenticateToken, async (req, res) => {
 app.get('/apolices/:id', authenticateToken, async (req, res) => {
     try { const [rows] = await pool.query('SELECT * FROM apolices WHERE id = ?', [req.params.id]); if(rows.length>0) res.json(rows[0]); else res.status(404).json({message:"Ñ encontrado"}); } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
-// CADASTRAR APÓLICE (COM VALOR_REPASSE)
 app.post('/cadastrar-apolice', authenticateToken, uploadS3.any(), async (req, res) => {
     try {
         const arquivo = (req.files && req.files.length > 0) ? req.files[0] : null;
@@ -350,52 +331,20 @@ app.post('/cadastrar-apolice', authenticateToken, uploadS3.any(), async (req, re
         const d = req.body;
         const idVeiculo = safeInt(d.veiculo_id);
         const usuarioId = req.user.id;
-        
         await pool.query(
-            `INSERT INTO apolices 
-            (numero_apolice, veiculo_id, arquivo_pdf, premio_total, premio_liquido, franquia_casco, vigencia_inicio, vigencia_fim, numero_proposta, usuario_id, valor_comissao, valor_repasse, status) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, 
-            [
-                d.numero_apolice, 
-                idVeiculo, 
-                linkArquivo, 
-                safeCurrency(d.premio_total), 
-                safeCurrency(d.premio_liquido), 
-                safeCurrency(d.franquia_casco), 
-                d.vigencia_inicio||null, 
-                d.vigencia_fim||null, 
-                d.numero_proposta, 
-                usuarioId, 
-                safeCurrency(d.valor_comissao), 
-                safeCurrency(d.valor_repasse), 
-                'EMITIDA'
-            ]
+            `INSERT INTO apolices (numero_apolice, veiculo_id, arquivo_pdf, premio_total, premio_liquido, franquia_casco, vigencia_inicio, vigencia_fim, numero_proposta, usuario_id, valor_comissao, valor_repasse, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, 
+            [d.numero_apolice, idVeiculo, linkArquivo, safeCurrency(d.premio_total), safeCurrency(d.premio_liquido), safeCurrency(d.franquia_casco), d.vigencia_inicio||null, d.vigencia_fim||null, d.numero_proposta, usuarioId, safeCurrency(d.valor_comissao), safeCurrency(d.valor_repasse), 'EMITIDA']
         );
         res.status(201).json({message: "Criado", link: linkArquivo});
     } catch(e) { console.error(e); res.status(500).json({message: e.message}); }
 });
-
-// ATUALIZAR APÓLICE (COM VALOR_REPASSE)
 app.put('/apolices/:id', authenticateToken, uploadS3.any(), async (req, res) => {
     try {
         const d = req.body;
         const idVeiculo = safeInt(d.veiculo_id);
-        
         await pool.query(
             `UPDATE apolices SET numero_apolice=?, numero_proposta=?, veiculo_id=?, premio_total=?, premio_liquido=?, franquia_casco=?, vigencia_inicio=?, vigencia_fim=?, valor_comissao=?, valor_repasse=? WHERE id=?`, 
-            [
-                d.numero_apolice, 
-                d.numero_proposta, 
-                idVeiculo, 
-                safeCurrency(d.premio_total), 
-                safeCurrency(d.premio_liquido), 
-                safeCurrency(d.franquia_casco), 
-                d.vigencia_inicio||null, 
-                d.vigencia_fim||null, 
-                safeCurrency(d.valor_comissao), 
-                safeCurrency(d.valor_repasse), 
-                req.params.id
-            ]
+            [d.numero_apolice, d.numero_proposta, idVeiculo, safeCurrency(d.premio_total), safeCurrency(d.premio_liquido), safeCurrency(d.franquia_casco), d.vigencia_inicio||null, d.vigencia_fim||null, safeCurrency(d.valor_comissao), safeCurrency(d.valor_repasse), req.params.id]
         );
         if (req.files && req.files.length > 0) {
             const linkArquivo = req.files[0].location || req.files[0].filename;
@@ -404,12 +353,11 @@ app.put('/apolices/:id', authenticateToken, uploadS3.any(), async (req, res) => 
         res.status(200).json({ message: "Atualizado" });
     } catch(e) { console.error(e); res.status(500).json({ message: e.message }); }
 });
-
 app.delete('/apolices/:id', authenticateToken, async (req, res) => {
     try { await pool.query('DELETE FROM apolices WHERE id = ?', [req.params.id]); res.json({ message: "Excluído" }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PROPOSTAS
+// PROPOSTAS E PDF IMPORT
 app.get('/propostas', authenticateToken, async (req, res) => { try { const [rows] = await pool.query('SELECT * FROM propostas ORDER BY id DESC'); res.json(rows); } catch (e) { res.status(500).json({ error: e.message }); }});
 app.get('/propostas/:id', authenticateToken, async (req, res) => { try { const [rows] = await pool.query('SELECT * FROM propostas WHERE id = ?', [req.params.id]); if(rows.length>0) res.json(rows[0]); else res.status(404).json({message:"Ñ encontrado"}); } catch (e) { res.status(500).json({ error: e.message }); }});
 app.post('/cadastrar-proposta', authenticateToken, async (req, res) => {
