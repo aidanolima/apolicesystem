@@ -130,7 +130,7 @@ app.get('/cadastro.html', (req, res) => servirPagina(res, 'cadastro.html'));
 app.get('/clientes.html', (req, res) => servirPagina(res, 'clientes.html'));
 app.get('/redefinir.html', (req, res) => servirPagina(res, 'redefinir.html'));
 
-// Rota Raiz (Login)
+// Rota Raiz (Login) - Alterado para garantir que redirecione para login.html
 app.get(['/', '/index.html', '/login'], (req, res) => servirPagina(res, 'login.html'));
 
 
