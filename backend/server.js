@@ -18,7 +18,7 @@ const multerS3 = require('multer-s3');
 console.log("⏳ Iniciando configurações do servidor...");
 
 const app = express();
-const port = process.env.PORT || 10000; // Render usa porta 10000 preferencialmente
+const port = process.env.PORT || 10000; // Ajustado para Render
 const JWT_SECRET = process.env.JWT_SECRET || 'seguradora_chave_secreta_super_segura_2024';
 
 // ==================================================
@@ -95,43 +95,53 @@ async function enviarNotificacao(para, assunto, texto) {
 }
 
 // ==================================================
-// 🚨 MIDDLEWARES GERAIS
+// 🚨 MIDDLEWARES
 // ==================================================
 app.use(express.json());
 app.use(cors());
 
-// Configuração para servir arquivos estáticos (CSS, JS, Imagens)
+// Configura pastas estáticas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(__dirname)); // Serve arquivos da pasta backend
-app.use(express.static(path.join(__dirname, '../'))); // Serve arquivos da raiz (HTMLs)
+app.use(express.static(__dirname)); 
+app.use(express.static(path.join(__dirname, '../'))); // Serve a raiz para CSS/JS
 
 // ==================================================
-// 📍 ROTAS DE PÁGINAS (FRONTEND) - CORREÇÃO DO ERRO
+// 📍 ROTAS OBRIGATÓRIAS (CORREÇÃO DO DASHBOARD)
 // ==================================================
+// Isso força o servidor a entregar o arquivo correto quando a URL é acessada
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dashboard.html'));
+});
 
-// Função para entregar arquivos HTML com segurança
-const servirPagina = (res, nomeArquivo) => {
-    // Tenta achar na raiz (../arquivo.html)
-    const caminho = path.join(__dirname, '../' + nomeArquivo);
-    res.sendFile(caminho, (err) => {
-        if (err) {
-            console.error(`Erro ao servir ${nomeArquivo}:`, err);
-            res.status(404).send(`Página ${nomeArquivo} não encontrada.`);
-        }
-    });
-};
+app.get('/apolice.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../apolice.html'));
+});
 
-// Mapeamento manual das páginas para garantir que funcionem
-app.get('/dashboard.html', (req, res) => servirPagina(res, 'dashboard.html'));
-app.get('/apolice.html', (req, res) => servirPagina(res, 'apolice.html'));
-app.get('/registro.html', (req, res) => servirPagina(res, 'registro.html'));
-app.get('/relatorios.html', (req, res) => servirPagina(res, 'relatorios.html'));
-app.get('/cadastro.html', (req, res) => servirPagina(res, 'cadastro.html'));
-app.get('/clientes.html', (req, res) => servirPagina(res, 'clientes.html'));
-app.get('/redefinir.html', (req, res) => servirPagina(res, 'redefinir.html'));
+app.get('/registro.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../registro.html'));
+});
 
-// Rota Raiz (Login) - Alterado para garantir que redirecione para login.html
-app.get(['/', '/index.html', '/login'], (req, res) => servirPagina(res, 'login.html'));
+app.get('/relatorios.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../relatorios.html'));
+});
+
+app.get('/cadastro.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../cadastro.html'));
+});
+
+app.get('/clientes.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../clientes.html'));
+});
+
+app.get('/redefinir.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../redefinir.html'));
+});
+
+// Rota raiz e Login
+app.get(['/', '/index.html', '/login'], (req, res) => {
+    const caminhoIndex = path.join(__dirname, '../index.html');
+    res.sendFile(caminhoIndex);
+});
 
 
 // ==================================================
@@ -169,8 +179,9 @@ const safeCurrency = (v) => {
 };
 const safeInt = (v) => { if (!v || v === '' || v === 'null') return null; return isNaN(parseInt(v)) ? null : parseInt(v); };
 
+
 // ==================================================
-// 🌐 ROTAS DE API (LOGIN E SENHA)
+// 🌐 API E FUNCIONALIDADES
 // ==================================================
 
 app.post('/login', async (req, res) => {
@@ -193,7 +204,7 @@ app.post('/forgot-password', async (req, res) => {
         const usuario = rows[0];
         const secret = JWT_SECRET + usuario.senha;
         const token = jwt.sign({ id: usuario.id, email: usuario.email }, secret, { expiresIn: '1h' });
-        const baseUrl = process.env.BASE_URL || 'https://apolicesystem.onrender.com'; // Ajustado para URL de produção
+        const baseUrl = process.env.BASE_URL || 'https://apolicesystem.onrender.com'; 
         const link = `${baseUrl}/redefinir.html?id=${usuario.id}&token=${token}`;
         await enviarNotificacao(email, "Redefinição de Senha 🔐", `Link: ${link}`);
         res.json({ message: "Instruções enviadas." });
@@ -340,7 +351,6 @@ app.post('/cadastrar-apolice', authenticateToken, uploadS3.any(), async (req, re
         const idVeiculo = safeInt(d.veiculo_id);
         const usuarioId = req.user.id;
         
-        // Query com VALOR_REPASSE
         await pool.query(
             `INSERT INTO apolices 
             (numero_apolice, veiculo_id, arquivo_pdf, premio_total, premio_liquido, franquia_casco, vigencia_inicio, vigencia_fim, numero_proposta, usuario_id, valor_comissao, valor_repasse, status) 
@@ -357,7 +367,7 @@ app.post('/cadastrar-apolice', authenticateToken, uploadS3.any(), async (req, re
                 d.numero_proposta, 
                 usuarioId, 
                 safeCurrency(d.valor_comissao), 
-                safeCurrency(d.valor_repasse), // Novo Campo
+                safeCurrency(d.valor_repasse), 
                 'EMITIDA'
             ]
         );
@@ -383,7 +393,7 @@ app.put('/apolices/:id', authenticateToken, uploadS3.any(), async (req, res) => 
                 d.vigencia_inicio||null, 
                 d.vigencia_fim||null, 
                 safeCurrency(d.valor_comissao), 
-                safeCurrency(d.valor_repasse), // Novo Campo
+                safeCurrency(d.valor_repasse), 
                 req.params.id
             ]
         );
