@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script>
+        // FORÇA A URL CORRETA DA API PARA GARANTIR QUE OS GRÁFICOS CARREGUEM
+        const API_URL = "https://apolicesystem.onrender.com";
+    </script>
     <script src="js/config.js"></script>
     <script src="js/masks.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,7 +18,7 @@
     script-src * 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net blob: data: gap:; 
     object-src * 'self' blob: data: gap:; 
     img-src * 'self' 'unsafe-inline' blob: data: gap:; 
-    connect-src 'self' http://localhost:3000 https://seguradoraproject.onrender.com * 'unsafe-inline' blob: data: gap:; 
+    connect-src 'self' http://localhost:10000 https://apolicesystem.onrender.com * 'unsafe-inline' blob: data: gap:; 
     font-src 'self' data: https://cdnjs.cloudflare.com; 
     frame-src * 'self' blob: data: gap:;">
     
@@ -359,16 +363,12 @@
             overlay.classList.toggle('active');
         }
 
-        // --- SCRIPT DE DESTAQUE AUTOMÁTICO DO MENU (Funciona em todas as páginas) ---
+        // --- SCRIPT DE DESTAQUE AUTOMÁTICO DO MENU ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Pega o nome da página atual (ex: 'apolice.html' ou 'dashboard.html')
             const currentPath = window.location.pathname.split('/').pop() || 'dashboard.html';
             const links = document.querySelectorAll('.header-link');
-            
             links.forEach(link => {
-                link.classList.remove('active'); // Limpa tudo antes
-                
-                // Se o href do link for igual à página atual, ativa ele
+                link.classList.remove('active'); 
                 if (link.getAttribute('href') === currentPath) {
                     link.classList.add('active');
                 }
