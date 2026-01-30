@@ -26,15 +26,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        /* --- FAIXA DE HOMOLOGAÇÃO --- */
-        .homolog-ribbon {
-            background-color: #ff9800; color: #fff; padding: 8px 0; text-align: center;
-            font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;
-            width: 100%; position: relative; z-index: 9990;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-
         /* --- LAYOUT DOS CARDS --- */
         .stats-container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-right: 5px; }
         .stat-card { flex: 1; min-width: 150px; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
@@ -187,10 +178,6 @@
 
     <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
 
-    <div class="homolog-ribbon">
-        <i class="fas fa-flask"></i> AMBIENTE DE HOMOLOGAÇÃO - APENAS TESTES
-    </div>
-    
     <header class="app-header">
         <button class="mobile-menu-btn" onclick="toggleMenu()">
             <i class="fas fa-bars"></i>
