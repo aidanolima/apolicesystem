@@ -90,24 +90,32 @@
             }
             .mobile-menu-btn { display: block; }
 
-            /* 2. Sidebar Lateral */
+            /* 2. Sidebar Lateral (CORRIGIDO) */
             .header-nav {
-                position: fixed;
-                top: 0;
-                left: -100%;
-                width: 280px; 
-                height: 100vh;
-                background-color: #003366;
-                flex-direction: column;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 280px !important;
+                height: 100vh !important;
+                background-color: #003366 !important;
+                flex-direction: column !important;
                 padding: 0;
                 box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-                transition: left 0.3s ease-in-out;
-                z-index: 10006; 
-                justify-content: flex-start;
+                
+                /* Usar Transform para melhor performance e evitar bugs de 'left' */
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                
+                z-index: 10006 !important; /* Acima do header e do overlay */
+                justify-content: flex-start !important;
                 overflow-y: auto;
+                display: flex !important;
             }
 
-            .header-nav.active { left: 0; }
+            /* Classe ativa traz o menu para a tela */
+            .header-nav.active { 
+                transform: translateX(0) !important;
+            }
 
             /* Cabeçalho do Menu Lateral */
             .sidebar-header {
@@ -121,7 +129,7 @@
 
             .sidebar-logo {
                 display: block;
-                height: 32px; /* Logo Menor e mais elegante */
+                height: 32px;
                 width: auto;
             }
 
@@ -134,7 +142,7 @@
                 cursor: pointer;
             }
 
-            /* 3. Links do Menu Mobile - ESTILO MAIS LINDO */
+            /* 3. Links do Menu Mobile */
             .header-link {
                 display: block;
                 padding: 18px 25px; 
