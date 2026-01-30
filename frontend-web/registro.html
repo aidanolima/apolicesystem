@@ -82,7 +82,6 @@
 
     <script>
         // Configuração de API (Local vs Produção)
-        // Usa config.js se disponível, senão fallback
         const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
         
         const token = localStorage.getItem('token');
@@ -98,8 +97,11 @@
         // ==================================================
         // 🔒 TRAVA DE SEGURANÇA (CRÍTICO)
         // ==================================================
-        // Se NÃO é admin E NÃO tem ID na URL (tentativa de criar novo) -> BLOQUEIA
-        if (tipoUsuarioLogado !== 'admin' && !idEdicao) {
+        // Define quem é MASTER (Admin ou TI)
+        const isMaster = (tipoUsuarioLogado === 'admin' || tipoUsuarioLogado === 'ti');
+
+        // Se NÃO é Master E NÃO tem ID na URL (tentativa de criar novo) -> BLOQUEIA
+        if (!isMaster && !idEdicao) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Acesso Restrito',
@@ -124,9 +126,8 @@
         });
 
         // --- LÓGICA DE SEGURANÇA NO FRONT-END (DROPDOWN) ---
-        // Se o usuário não for admin (e passou pela trava acima, ou seja, está editando),
-        // força o campo a ter apenas a opção 'padrao' para ele não se promover.
-        if (tipoUsuarioLogado !== 'admin') {
+        // Se NÃO for Master (Admin/TI), força o campo a ter apenas a opção 'padrao'
+        if (!isMaster) {
             const selectTipo = document.getElementById('tipo');
             selectTipo.innerHTML = '<option value="padrao">Padrão (Visualizar)</option>';
             selectTipo.disabled = true; // Visualmente travado
@@ -157,8 +158,9 @@
                 document.getElementById('nome').value = user.nome;
                 document.getElementById('email').value = user.email;
                 
-                // Se for admin, carrega o valor real. Se não for, já travamos como 'padrao' acima.
-                if (tipoUsuarioLogado === 'admin') {
+                // Se for Master (Admin/TI), carrega o valor real. 
+                // Se não for, já travamos como 'padrao' acima.
+                if (isMaster) {
                     document.getElementById('tipo').value = user.tipo;
                 }
 

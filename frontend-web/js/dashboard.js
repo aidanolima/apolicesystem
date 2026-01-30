@@ -72,30 +72,38 @@ function verificarLogin() {
     const token = localStorage.getItem('token');
     if (!token) { window.location.href = 'index.html'; return; }
     
+    // Leitura segura do Token para garantir permissões corretas
+    const payload = parseJwt(token);
+    const tipo = payload ? payload.tipo : localStorage.getItem('tipo_usuario');
     const nome = localStorage.getItem('usuario_logado');
-    const tipo = localStorage.getItem('tipo_usuario');
     
-    if (document.getElementById('user-name-display') && nome) document.getElementById('user-name-display').innerText = nome.split(' ')[0];
-    if (document.getElementById('user-role-display') && tipo) document.getElementById('user-role-display').innerText = tipo.toUpperCase();
+    if (document.getElementById('user-name-display') && nome) 
+        document.getElementById('user-name-display').innerText = nome.split(' ')[0];
+    if (document.getElementById('user-role-display') && tipo) 
+        document.getElementById('user-role-display').innerText = tipo.toUpperCase();
 
-    // --- CORREÇÃO: Visibilidade da Seção de Usuários ---
+    // Referências aos elementos
     const secaoUsers = document.getElementById('secao-usuarios');
     const cardAdmin = document.getElementById('card-admin-stat');
     
-    // A tabela de usuários SEMPRE aparece (filtrada pelo backend/frontend)
+    // A tabela de usuários SEMPRE aparece (o conteúdo é filtrado)
     if(secaoUsers) secaoUsers.style.display = 'block'; 
 
-    if (tipo !== 'admin') {
-        // Se NÃO for admin:
+    // --- REGRA DE OURO: ADMIN OU TI (MASTER) ---
+    const isMaster = (tipo === 'admin' || tipo === 'ti');
+
+    if (!isMaster) {
+        // Se for Padrão:
         // 1. Esconde o card de estatísticas do topo
         if(cardAdmin) cardAdmin.style.display = 'none';
         
-        // 2. Esconde o botão "+ Novo Usuário" (para evitar duplicidade)
+        // 2. Esconde o botão "+ Novo Usuário" para evitar erro de duplicidade
+        // Ele só deve ver a tabela para editar a si mesmo
         const btnNovoUser = document.querySelector('#secao-usuarios .btn-novo');
         if(btnNovoUser) btnNovoUser.style.display = 'none';
 
     } else {
-        // Se for Admin: Mostra tudo
+        // Se for Admin ou TI: Mostra tudo
         if(cardAdmin) cardAdmin.style.display = 'flex';
         
         const btnNovoUser = document.querySelector('#secao-usuarios .btn-novo');
@@ -103,7 +111,10 @@ function verificarLogin() {
     }
 
     const btnLogout = document.getElementById('btn-logout');
-    if(btnLogout) btnLogout.addEventListener('click', () => { localStorage.clear(); window.location.href = 'index.html'; });
+    if(btnLogout) btnLogout.addEventListener('click', () => { 
+        localStorage.clear(); 
+        window.location.href = 'index.html'; 
+    });
 }
 
 // ==================================================
@@ -245,7 +256,8 @@ async function buscarDadosClientes() {
 }
 
 async function buscarDadosUsuarios() {
-    // --- CORREÇÃO: Busca permitida para todos ---
+    // --- CORREÇÃO: Removemos a trava anterior. Deixa o fetch acontecer.
+    // O backend decide se retorna tudo (Admin/TI) ou apenas o próprio (User).
     try {
         const res = await fetch(`${API_BASE_URL}/usuarios`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
         const dados = await res.json();
@@ -394,18 +406,21 @@ function renderLinhaCliente(c, tbody) {
 }
 
 function renderLinhaUsuario(u, tbody) {
-    const badgeClass = u.tipo === 'admin' ? 'badge-admin' : 'badge-user';
+    // Define a classe do badge baseado no tipo
+    const badgeClass = u.tipo === 'admin' ? 'badge-admin' : (u.tipo === 'ti' ? 'badge-admin' : 'badge-user'); // TI usa badge similar ou igual a Admin se preferir
     
-    // --- CORREÇÃO DO PULO DO GATO ---
+    // --- PULO DO GATO ---
     // Extrai o ID do TOKEN (mais seguro que localStorage)
     const token = localStorage.getItem('token');
     const payload = parseJwt(token);
     const idLogado = payload ? payload.id : null;
     const tipoLogado = payload ? payload.tipo : null;
 
-    // Se não for admin, só renderiza se o ID da linha for igual ao ID do token
-    // Convertemos para String para evitar erros de tipo (número vs texto)
-    if (tipoLogado !== 'admin' && String(u.id) !== String(idLogado)) {
+    // Regra Master: Admin ou TI
+    const isMaster = (tipoLogado === 'admin' || tipoLogado === 'ti');
+
+    // Se NÃO for Master (Admin/TI), só renderiza se o ID da linha for igual ao ID do token
+    if (!isMaster && String(u.id) !== String(idLogado)) {
         return; 
     }
 
@@ -416,7 +431,7 @@ function renderLinhaUsuario(u, tbody) {
         <td><span class="badge ${badgeClass}">${u.tipo.toUpperCase()}</span></td>
         <td style="text-align:center;">
             <button class="action-btn btn-edit" onclick="window.location.href='registro.html?id=${u.id}&origin=dashboard'" title="Editar"><i class="fas fa-edit"></i></button>
-            ${tipoLogado === 'admin' ? `<button class="action-btn btn-delete" onclick="deletarItem('usuarios', ${u.id})" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
+            ${isMaster ? `<button class="action-btn btn-delete" onclick="deletarItem('usuarios', ${u.id})" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
         </td>
     `;
     tbody.appendChild(tr);
