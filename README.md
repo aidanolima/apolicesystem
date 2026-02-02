@@ -15,27 +15,7 @@ O sistema oferece uma gama de funcionalidades tanto para o cliente quanto para o
     -   Acompanhamento do status das propostas de seguro.
 -   **Relatórios:**
     -   Geração de relatórios para análise e tomada de decisão.
-
-
-## 🚀 Perfis de Acesso
     
-    **Apólices:**
-        Admin: Vê todas.
-        Básico: Vê apenas onde usuario_id é o dele.
-
-    **Clientes (Propostas):**
-        Admin: Vê todos.
-        Básico: Vê apenas onde usuario_id é o dele.
-
-Ao cadastrar um novo cliente, o sistema agora grava o ID do usuário.
-
-    **Usuários:**
-        Admin: Vê a lista de todos.
-        Básico: Vê apenas o seu próprio perfil na lista (ou lista vazia, conforme preferir, configurei para ver apenas o próprio).
-
-    **Comissões:**
-        Mantive a lógica corrigida anteriormente (Soma Total vs Soma Individual). Se aparecer R$ 0,00 para o usuário básico, é porque ele ainda não cadastrou nenhuma apólice nova (as antigas foram para o Admin).
-
 ## 🛠️ Tecnologias Utilizadas
 
 O projeto foi construído utilizando as seguintes tecnologias:
@@ -44,7 +24,7 @@ O projeto foi construído utilizando as seguintes tecnologias:
 
 -   **Node.js:** Ambiente de execução para o servidor.
 -   **Express.js:** Framework para a construção da API REST.
--   **MongoDB:** Banco de dados NoSQL para armazenamento dos dados (inferido a partir do uso comum com Mongoose/Node.js).
+-   **MySql:** Banco de dados MySQL para armazenamento dos dados (inferido a partir do uso comum com Mongoose/Node.js).
 -   **Multer:** Middleware para o upload de arquivos.
 -   **Dotenv:** Para gerenciamento de variáveis de ambiente.
 
