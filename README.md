@@ -24,7 +24,7 @@ O projeto foi construído utilizando as seguintes tecnologias:
 
 -   **Node.js:** Ambiente de execução para o servidor.
 -   **Express.js:** Framework para a construção da API REST.
--   **MongoDB:** Banco de dados NoSQL para armazenamento dos dados (inferido a partir do uso comum com Mongoose/Node.js).
+-   **MySql:** Banco de dados MySQL para armazenamento dos dados (inferido a partir do uso comum com Mongoose/Node.js).
 -   **Multer:** Middleware para o upload de arquivos.
 -   **Dotenv:** Para gerenciamento de variáveis de ambiente.
 
