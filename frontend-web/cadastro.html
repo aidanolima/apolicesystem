@@ -75,7 +75,8 @@
                     </div>
                     <div class="form-group">
                         <label for="documento">CPF / CNPJ *</label>
-                        <input type="text" id="documento" class="form-control mask-cpf" placeholder="000.000.000-00"></div>
+                        <input type="text" id="documento" class="form-control" placeholder="CPF ou CNPJ">
+                    </div>
                 </div>
                 
                 <div class="form-row">
@@ -222,7 +223,7 @@
                         <label for="forma_pagamento">Forma de Pagamento</label>
                         <select id="forma_pagamento" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                             <option value="cartao_credito">Cartão de Crédito</option>
-                            <option value="pix">Pix</option>
+                            <option value="pix">PIX</option>
                             <option value="boleto">Boleto Bancário</option>
                             <option value="debito">Débito em Conta</option>
                         </select>
@@ -248,9 +249,22 @@
         const idEdicao = urlParams.get('id');
         const token = localStorage.getItem('token');
 
-        // MÁSCARAS (JQuery)
+        // --- CORREÇÃO: MÁSCARA DINÂMICA CPF/CNPJ ---
         $(document).ready(function(){
-            $('#documento').mask('000.000.000-00'); 
+            // Função que decide qual máscara usar baseado no tamanho do texto
+            var CpfCnpjMaskBehavior = function (val) {
+                return val.replace(/\D/g, '').length <= 11 ? '000.000.000-009' : '00.000.000/0000-00';
+            },
+            cpfCnpjpOptions = {
+                onKeyPress: function(val, e, field, options) {
+                    field.mask(CpfCnpjMaskBehavior.apply({}, arguments), options);
+                }
+            };
+
+            // Aplica a máscara dinâmica ao campo documento
+            $('#documento').mask(CpfCnpjMaskBehavior, cpfCnpjpOptions);
+            
+            // Outras máscaras fixas
             $('#telefone').mask('(00) 00000-0000');
             $('#cep').mask('00000-000');
             $('#cep_pernoite').mask('00000-000');
@@ -424,6 +438,5 @@
             }
         }
     </script>
-    <script src="js/masks.js"></script>
 </body>
 </html>
