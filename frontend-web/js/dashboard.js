@@ -3,6 +3,7 @@
 // ==================================================
 const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
 const ITENS_POR_PAGINA = 5; 
+const TEMPO_INATIVIDADE_MINUTOS = 15; // ⏳ Tempo para auto-logout (15 min)
 
 const estadoGlobal = {
     apolices: { todos: [], filtrados: [], paginaAtual: 1 },
@@ -12,9 +13,10 @@ const estadoGlobal = {
 
 let chartStatus = null;
 let chartVendas = null;
+let tempoInatividade; // Variável para controlar o timer
 
 // ==================================================
-// 2. UTILITÁRIOS (NOVO: Extrair ID do Token)
+// 2. UTILITÁRIOS (JWT)
 // ==================================================
 function parseJwt(token) {
     try {
@@ -33,10 +35,10 @@ function parseJwt(token) {
 // 3. INICIALIZAÇÃO
 // ==================================================
 document.addEventListener('DOMContentLoaded', () => {
-    verificarLogin();
+    verificarLogin(); // Verifica token imediatamente
+    iniciarMonitoramentoInatividade(); // 🕒 Inicia o relógio de auto-logout
+
     carregarResumoCards();
-    
-    // Inicializa dados e gráficos em sequência para garantir sincronia
     inicializarDados();
 
     configurarBusca('busca-apolices', 'apolices');
@@ -50,7 +52,6 @@ async function inicializarDados() {
         buscarDadosClientes(),
         buscarDadosUsuarios()
     ]);
-    // Só monta o gráfico após ter certeza que os dados das apólices chegaram
     carregarGraficos();
 }
 
@@ -68,53 +69,86 @@ function configurarBusca(inputId, tipo) {
     }
 }
 
+// ==================================================
+// 🔐 SISTEMA DE LOGIN, SEGURANÇA E INATIVIDADE
+// ==================================================
+
 function verificarLogin() {
     const token = localStorage.getItem('token');
-    if (!token) { window.location.href = 'index.html'; return; }
     
-    // Leitura segura do Token para garantir permissões corretas
+    // Se não tiver token, expulsa imediatamente
+    if (!token) { 
+        realizarLogout(); // Garante limpeza total
+        return; 
+    }
+    
+    // Verifica se o token expirou
     const payload = parseJwt(token);
-    const tipo = payload ? payload.tipo : localStorage.getItem('tipo_usuario');
+    if (!payload || (payload.exp * 1000) < Date.now()) {
+        alert("Sua sessão expirou. Faça login novamente."); // Alerta simples antes de sair
+        realizarLogout();
+        return;
+    }
+    
     const nome = localStorage.getItem('usuario_logado');
+    const tipo = localStorage.getItem('tipo_usuario'); // Pega do localStorage ou Payload
     
     if (document.getElementById('user-name-display') && nome) 
         document.getElementById('user-name-display').innerText = nome.split(' ')[0];
     if (document.getElementById('user-role-display') && tipo) 
         document.getElementById('user-role-display').innerText = tipo.toUpperCase();
 
-    // Referências aos elementos
+    // --- LÓGICA DE VISIBILIDADE (TI/ADMIN) ---
     const secaoUsers = document.getElementById('secao-usuarios');
     const cardAdmin = document.getElementById('card-admin-stat');
     
-    // A tabela de usuários SEMPRE aparece (o conteúdo é filtrado)
     if(secaoUsers) secaoUsers.style.display = 'block'; 
 
-    // --- REGRA DE OURO: ADMIN OU TI (MASTER) ---
     const isMaster = (tipo === 'admin' || tipo === 'ti');
 
     if (!isMaster) {
-        // Se for Padrão:
-        // 1. Esconde o card de estatísticas do topo
         if(cardAdmin) cardAdmin.style.display = 'none';
-        
-        // 2. Esconde o botão "+ Novo Usuário" para evitar erro de duplicidade
-        // Ele só deve ver a tabela para editar a si mesmo
         const btnNovoUser = document.querySelector('#secao-usuarios .btn-novo');
         if(btnNovoUser) btnNovoUser.style.display = 'none';
-
     } else {
-        // Se for Admin ou TI: Mostra tudo
         if(cardAdmin) cardAdmin.style.display = 'flex';
-        
         const btnNovoUser = document.querySelector('#secao-usuarios .btn-novo');
         if(btnNovoUser) btnNovoUser.style.display = 'inline-block';
     }
 
     const btnLogout = document.getElementById('btn-logout');
-    if(btnLogout) btnLogout.addEventListener('click', () => { 
-        localStorage.clear(); 
-        window.location.href = 'index.html'; 
+    if(btnLogout) btnLogout.addEventListener('click', realizarLogout);
+}
+
+function realizarLogout() {
+    localStorage.clear(); 
+    sessionStorage.clear(); 
+    window.location.href = 'index.html'; 
+}
+
+function iniciarMonitoramentoInatividade() {
+    const eventos = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    
+    const resetarTemporizador = () => {
+        clearTimeout(tempoInatividade);
+        tempoInatividade = setTimeout(() => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sessão Expirada',
+                text: 'Você foi desconectado por inatividade.',
+                confirmButtonColor: '#003366',
+                allowOutsideClick: false
+            }).then(() => {
+                realizarLogout();
+            });
+        }, TEMPO_INATIVIDADE_MINUTOS * 60 * 1000);
+    };
+
+    eventos.forEach(evento => {
+        window.addEventListener(evento, resetarTemporizador);
     });
+
+    resetarTemporizador(); // Inicia contagem
 }
 
 // ==================================================
@@ -256,8 +290,6 @@ async function buscarDadosClientes() {
 }
 
 async function buscarDadosUsuarios() {
-    // --- CORREÇÃO: Removemos a trava anterior. Deixa o fetch acontecer.
-    // O backend decide se retorna tudo (Admin/TI) ou apenas o próprio (User).
     try {
         const res = await fetch(`${API_BASE_URL}/usuarios`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
         const dados = await res.json();
@@ -380,7 +412,7 @@ function renderLinhaApolice(a, tbody) {
         <td>${a.numero_apolice || '-'}</td>
         <td>${dFim.toLocaleDateString('pt-BR')} <br> <span class="badge ${statusClass}" style="margin-top:2px;">${statusTexto}</span></td>
         <td>${valTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-        <td style="color:#2e7d32; font-weight:bold;">${valComissao.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+        <td style="color:#00a86b; font-weight:bold;">${valComissao.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
         <td style="text-align:center;">
             <button class="action-btn btn-pdf-active" onclick="abrirPdfSeguro('${a.id}')" title="Ver PDF"><i class="fas fa-file-pdf"></i></button>
             <button class="action-btn btn-edit" onclick="window.location.href='apolice.html?id=${a.id}'" title="Editar"><i class="fas fa-edit"></i></button>
@@ -406,20 +438,15 @@ function renderLinhaCliente(c, tbody) {
 }
 
 function renderLinhaUsuario(u, tbody) {
-    // Define a classe do badge baseado no tipo
-    const badgeClass = u.tipo === 'admin' ? 'badge-admin' : (u.tipo === 'ti' ? 'badge-admin' : 'badge-user'); // TI usa badge similar ou igual a Admin se preferir
+    const badgeClass = u.tipo === 'admin' ? 'badge-admin' : (u.tipo === 'ti' ? 'badge-admin' : 'badge-user');
     
-    // --- PULO DO GATO ---
-    // Extrai o ID do TOKEN (mais seguro que localStorage)
     const token = localStorage.getItem('token');
     const payload = parseJwt(token);
     const idLogado = payload ? payload.id : null;
     const tipoLogado = payload ? payload.tipo : null;
 
-    // Regra Master: Admin ou TI
     const isMaster = (tipoLogado === 'admin' || tipoLogado === 'ti');
 
-    // Se NÃO for Master (Admin/TI), só renderiza se o ID da linha for igual ao ID do token
     if (!isMaster && String(u.id) !== String(idLogado)) {
         return; 
     }
@@ -454,14 +481,18 @@ async function deletarItem(tipo, id) {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             
+            let data;
+            try { data = await res.json(); } catch(e) { data = null; }
+
             if (res.ok) {
-                await Swal.fire('Deletado!', 'Registro removido.', 'success');
+                await Swal.fire('Deletado!', '', 'success');
                 if(tipo === 'apolices') buscarDadosApolices();
                 if(tipo === 'propostas') buscarDadosClientes();
                 if(tipo === 'usuarios') buscarDadosUsuarios();
                 carregarResumoCards();
             } else {
-                Swal.fire('Erro', 'Não foi possível excluir.', 'error');
+                const msgErro = (data && data.message) ? data.message : 'Não foi possível excluir.';
+                Swal.fire('Bloqueado', msgErro, 'error'); 
             }
         } catch (error) {
             Swal.fire('Erro', 'Falha de conexão.', 'error');

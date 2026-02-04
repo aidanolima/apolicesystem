@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <script src="js/config.js"></script>
     <script src="js/masks.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -71,7 +74,7 @@
         .page-btn.active { background-color: #003366; color: white; border-color: #003366; font-weight: bold; }
         .page-btn:disabled { background-color: #f4f4f4; color: #ccc; cursor: not-allowed; }
 
-        /* --- MENU MOBILE RESPONSIVO (CORRIGIDO) --- */
+        /* --- MENU MOBILE RESPONSIVO --- */
         .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px; }
         .close-menu-btn { display: none; }
         .sidebar-logo { display: none; }
@@ -85,7 +88,6 @@
             }
             .mobile-menu-btn { display: block; }
 
-            /* MENU COM ANIMAÇÃO CORRETA */
             .header-nav {
                 position: fixed !important;
                 top: 0 !important;
@@ -96,21 +98,15 @@
                 flex-direction: column !important;
                 padding: 0;
                 box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-                
-                /* Animação suave deslizando */
                 transform: translateX(-100%);
                 transition: transform 0.3s ease-in-out;
-                
                 z-index: 10006 !important;
                 justify-content: flex-start !important;
                 overflow-y: auto;
                 display: flex !important;
             }
 
-            /* Quando ativo, traz para a tela */
-            .header-nav.active { 
-                transform: translateX(0) !important;
-            }
+            .header-nav.active { transform: translateX(0) !important; }
 
             .sidebar-header {
                 display: flex;
@@ -121,11 +117,7 @@
                 margin-bottom: 10px;
             }
 
-            .sidebar-logo {
-                display: block;
-                height: 32px;
-                width: auto;
-            }
+            .sidebar-logo { display: block; height: 32px; width: auto; }
 
             .close-menu-btn {
                 display: block;
@@ -151,17 +143,8 @@
                 transition: all 0.2s;
             }
             
-            .header-link:hover {
-                background-color: rgba(255,255,255,0.1);
-                color: #fff !important;
-            }
-
-            .header-link.active {
-                background-color: rgba(255,255,255,0.15);
-                color: #fff !important;
-                font-weight: 700;
-                border-left: 4px solid #ff9800;
-            }
+            .header-link:hover { background-color: rgba(255,255,255,0.1); color: #fff !important; }
+            .header-link.active { background-color: rgba(255,255,255,0.15); color: #fff !important; font-weight: 700; border-left: 4px solid #ff9800; }
 
             .menu-overlay {
                 display: none;
