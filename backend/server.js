@@ -16,6 +16,7 @@ const multerS3 = require('multer-s3');
 console.log("⏳ Iniciando configurações do servidor...");
 
 const app = express();
+
 // 🚫 Middleware Anti-Cache Global para a API
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
     res.set('Expires', '0');
     next();
 });
+
 const port = process.env.PORT || 10000;
 const JWT_SECRET = process.env.JWT_SECRET || 'seguradora_chave_secreta_super_segura_2024';
 
@@ -365,7 +367,7 @@ app.get('/dashboard-graficos', authenticateToken, async (req, res) => {
 });
 
 // ==================================================
-// 📄 CRUD APÓLICES E PROPOSTAS
+// 📄 APÓLICES (COM ROTA DE LEITURA POR ID)
 // ==================================================
 app.get('/apolices', authenticateToken, async (req, res) => {
     try {
@@ -385,7 +387,7 @@ app.get('/apolices', authenticateToken, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- ROTA FALTANTE ADICIONADA: BUSCAR UMA APÓLICE POR ID ---
+// --- ROTA DE LEITURA INDIVIDUAL DE APÓLICE ---
 app.get('/apolices/:id', authenticateToken, async (req, res) => {
     try {
         let query = 'SELECT * FROM apolices WHERE id = ?';
@@ -402,7 +404,6 @@ app.get('/apolices/:id', authenticateToken, async (req, res) => {
         res.json(rows[0]);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// -----------------------------------------------------------
 
 app.post('/cadastrar-apolice', authenticateToken, uploadS3.any(), async (req, res) => {
     try {
@@ -440,6 +441,9 @@ app.delete('/apolices/:id', authenticateToken, async (req, res) => {
     try { await pool.query('DELETE FROM apolices WHERE id = ?', [req.params.id]); res.json({ message: "Excluído" }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ==================================================
+// 📄 PROPOSTAS (CLIENTES) - COM A CORREÇÃO DA ROTA DE EDIÇÃO
+// ==================================================
 app.get('/propostas', authenticateToken, async (req, res) => { 
     try { 
         let query = 'SELECT * FROM propostas';
@@ -455,6 +459,25 @@ app.get('/propostas', authenticateToken, async (req, res) => {
         res.json(rows); 
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// --- NOVA ROTA ADICIONADA: BUSCAR UM CLIENTE POR ID ---
+app.get('/propostas/:id', authenticateToken, async (req, res) => {
+    try {
+        let query = 'SELECT * FROM propostas WHERE id = ?';
+        let params = [req.params.id];
+
+        // Se não for master, garante que só acessa o dele
+        if (!isMasterUser(req.user.tipo)) {
+            query += ' AND usuario_id = ?';
+            params.push(req.user.id);
+        }
+
+        const [rows] = await pool.query(query, params);
+        if (rows.length === 0) return res.status(404).json({ message: "Cliente não encontrado ou acesso negado." });
+        res.json(rows[0]);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+// -----------------------------------------------------------
 
 app.post('/cadastrar-proposta', authenticateToken, async (req, res) => {
     try { 

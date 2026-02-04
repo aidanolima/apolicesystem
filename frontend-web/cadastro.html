@@ -13,7 +13,7 @@
     <meta http-equiv="Content-Security-Policy" 
     content="default-src * 'self' blob: data: gap:; 
     style-src * 'self' 'unsafe-inline' blob: data: gap:; 
-    script-src * 'self' 'unsafe-eval' 'unsafe-inline' blob: data: gap:; 
+    script-src * 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net blob: data: gap:; 
     object-src * 'self' blob: data: gap:; 
     img-src * 'self' 'unsafe-inline' blob: data: gap:; 
     connect-src 'self' https://viacep.com.br https://seguradoraproject.onrender.com * 'unsafe-inline' blob: data: gap:; 
@@ -222,6 +222,7 @@
                         <label for="forma_pagamento">Forma de Pagamento</label>
                         <select id="forma_pagamento" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                             <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="pix">Pix</option>
                             <option value="boleto">Boleto Bancário</option>
                             <option value="debito">Débito em Conta</option>
                         </select>
@@ -240,15 +241,14 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO DA API ---
-        // CORREÇÃO: URL limpa, sem duplicação de https://
-        //const API_URL = 'http://localhost:3000';
-
+        // Configuração Inicial
+        const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
+        
         const urlParams = new URLSearchParams(window.location.search);
         const idEdicao = urlParams.get('id');
         const token = localStorage.getItem('token');
 
-        // --- MÁSCARAS (JQuery) ---
+        // MÁSCARAS (JQuery)
         $(document).ready(function(){
             $('#documento').mask('000.000.000-00'); 
             $('#telefone').mask('(00) 00000-0000');
@@ -256,52 +256,40 @@
             $('#cep_pernoite').mask('00000-000');
         });
 
-        // --- INICIALIZAÇÃO ---
+        // INICIALIZAÇÃO
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Validar Token
-            if (!token) { 
-                console.warn("Sem token de acesso. Redirecionando...");
-                window.location.href = 'index.html'; 
-                return; 
-            }
+            if (!token) { window.location.href = 'index.html'; return; }
 
-            // 2. Exibir Usuário Logado
             const nomeUser = localStorage.getItem('usuario_logado');
             const tipoUser = localStorage.getItem('tipo_usuario');
             
-            console.log("Status Usuário:", nomeUser, tipoUser); // Debug no Console
+            if (nomeUser) document.getElementById('user-name-display').innerText = nomeUser.split(' ')[0];
+            if (tipoUser) document.getElementById('user-role-display').innerText = tipoUser.toUpperCase();
 
-            if (nomeUser) {
-                document.getElementById('user-name-display').innerText = nomeUser.split(' ')[0];
-            }
-            if (tipoUser) {
-                document.getElementById('user-role-display').innerText = tipoUser.toUpperCase();
-            }
-
-            // 3. Configurar Botão Sair
             document.getElementById('btn-logout').addEventListener('click', function() {
                 localStorage.clear();
                 window.location.href = 'index.html';
             });
 
-            // 4. Configurar Modo Edição
             if (idEdicao) {
+                // Modo Edição
                 document.getElementById('titulo-pagina').innerText = `Editando Cliente #${idEdicao}`;
                 const btn = document.getElementById('btn-salvar');
                 btn.innerHTML = '<i class="fas fa-sync-alt"></i> ATUALIZAR CLIENTE';
                 btn.style.backgroundColor = "#ffa000"; 
+                
+                // Exibe loading imediatamente
+                Swal.fire({title: 'Carregando...', text: 'Buscando dados do cliente', didOpen: () => Swal.showLoading()});
                 carregarDadosCliente(idEdicao);
             }
         });
 
-        // --- BUSCA DE ENDEREÇO (VIA CEP) ---
+        // BUSCA DE ENDEREÇO
         async function buscarEndereco(cep) {
-            console.log("Pesquisando CEP:", cep);
             const cepLimpo = cep.replace(/\D/g, '');
             if (cepLimpo.length !== 8) return;
 
             try {
-                // A URL deve ser exata. O CSP já permite viacep.com.br
                 const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
                 const data = await res.json();
                 
@@ -313,21 +301,14 @@
                     document.getElementById('numero').focus();
                 } else {
                     Swal.fire('CEP', 'CEP não encontrado.', 'info');
-                    // Limpa campos se não encontrar
-                    document.getElementById('endereco').value = "";
-                    document.getElementById('bairro').value = "";
-                    document.getElementById('cidade').value = "";
-                    document.getElementById('uf').value = "";
                 }
             } catch (e) { 
-                console.error("Erro na busca de CEP:", e); 
                 Swal.fire('Erro', 'Falha ao buscar CEP.', 'error');
             }
         }
 
-        // --- SALVAR / ATUALIZAR CLIENTE ---
+        // SALVAR / ATUALIZAR
         async function salvarCliente() {
-            // Validação simples
             const nome = document.getElementById('nome').value;
             const doc = document.getElementById('documento').value;
             const placa = document.getElementById('placa').value;
@@ -337,7 +318,6 @@
                 return;
             }
 
-            // Monta payload
             const dados = {
                 nome: document.getElementById('nome').value,
                 documento: document.getElementById('documento').value,
@@ -366,14 +346,11 @@
                 forma_pagamento: document.getElementById('forma_pagamento').value
             };
 
-            const endpoint = idEdicao ? `${API_URL}/propostas/${idEdicao}` : `${API_URL}/cadastrar-proposta`;
+            const endpoint = idEdicao ? `${BASE_API}/propostas/${idEdicao}` : `${BASE_API}/cadastrar-proposta`;
             const method = idEdicao ? 'PUT' : 'POST';
 
             try {
-                Swal.fire({
-                    title: 'Salvando...',
-                    didOpen: () => Swal.showLoading()
-                });
+                Swal.fire({ title: 'Salvando...', didOpen: () => Swal.showLoading() });
 
                 const res = await fetch(endpoint, {
                     method: method,
@@ -397,15 +374,14 @@
                     Swal.fire('Erro', err.message || 'Erro ao salvar', 'error');
                 }
             } catch (error) {
-                console.error(error);
                 Swal.fire('Erro', 'Falha na conexão com o servidor.', 'error');
             }
         }
 
-        // --- CARREGAR DADOS (MODO EDIÇÃO) ---
+        // CARREGAR DADOS
         async function carregarDadosCliente(id) {
             try {
-                const res = await fetch(`${API_URL}/propostas/${id}`, {
+                const res = await fetch(`${BASE_API}/propostas/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error("Erro ao buscar dados");
@@ -441,17 +417,13 @@
                 document.getElementById('carro_reserva').value = d.carro_reserva || 'nao';
                 document.getElementById('forma_pagamento').value = d.forma_pagamento || 'boleto';
 
+                Swal.close(); // Fecha o Loading
             } catch (e) {
                 console.error(e);
                 Swal.fire('Erro', 'Não foi possível carregar os dados do cliente.', 'error');
             }
         }
     </script>
-    <script src="js/auth.js"></script>
-    
     <script src="js/masks.js"></script>
-    
-
-
 </body>
 </html>
