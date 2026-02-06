@@ -3,7 +3,7 @@
 // ==================================================
 const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
 const ITENS_POR_PAGINA = 5; 
-const TEMPO_INATIVIDADE_MINUTOS = 15; // ⏳ Tempo para auto-logout (15 min)
+const TEMPO_INATIVIDADE_MINUTOS = 15; 
 
 const estadoGlobal = {
     apolices: { todos: [], filtrados: [], paginaAtual: 1 },
@@ -13,7 +13,7 @@ const estadoGlobal = {
 
 let chartStatus = null;
 let chartVendas = null;
-let tempoInatividade; // Variável para controlar o timer
+let tempoInatividade; 
 
 // ==================================================
 // 2. UTILITÁRIOS (JWT)
@@ -35,8 +35,8 @@ function parseJwt(token) {
 // 3. INICIALIZAÇÃO
 // ==================================================
 document.addEventListener('DOMContentLoaded', () => {
-    verificarLogin(); // Verifica token imediatamente
-    iniciarMonitoramentoInatividade(); // 🕒 Inicia o relógio de auto-logout
+    verificarLogin(); 
+    iniciarMonitoramentoInatividade(); 
 
     carregarResumoCards();
     inicializarDados();
@@ -76,29 +76,26 @@ function configurarBusca(inputId, tipo) {
 function verificarLogin() {
     const token = localStorage.getItem('token');
     
-    // Se não tiver token, expulsa imediatamente
     if (!token) { 
-        realizarLogout(); // Garante limpeza total
+        realizarLogout(); 
         return; 
     }
     
-    // Verifica se o token expirou
     const payload = parseJwt(token);
     if (!payload || (payload.exp * 1000) < Date.now()) {
-        alert("Sua sessão expirou. Faça login novamente."); // Alerta simples antes de sair
+        alert("Sua sessão expirou. Faça login novamente.");
         realizarLogout();
         return;
     }
     
     const nome = localStorage.getItem('usuario_logado');
-    const tipo = localStorage.getItem('tipo_usuario'); // Pega do localStorage ou Payload
+    const tipo = localStorage.getItem('tipo_usuario'); 
     
     if (document.getElementById('user-name-display') && nome) 
         document.getElementById('user-name-display').innerText = nome.split(' ')[0];
     if (document.getElementById('user-role-display') && tipo) 
         document.getElementById('user-role-display').innerText = tipo.toUpperCase();
 
-    // --- LÓGICA DE VISIBILIDADE (TI/ADMIN) ---
     const secaoUsers = document.getElementById('secao-usuarios');
     const cardAdmin = document.getElementById('card-admin-stat');
     
@@ -148,7 +145,7 @@ function iniciarMonitoramentoInatividade() {
         window.addEventListener(evento, resetarTemporizador);
     });
 
-    resetarTemporizador(); // Inicia contagem
+    resetarTemporizador(); 
 }
 
 // ==================================================
@@ -176,7 +173,6 @@ function atualizarCard(id, valor) {
     if (el) el.innerText = valor || 0;
 }
 
-// --- CÁLCULO DE STATUS CORRIGIDO ---
 function calcularStatusLocalmente() {
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
@@ -388,17 +384,13 @@ window.mudarPagina = function(tipo, novaPagina) {
 
 function renderLinhaApolice(a, tbody) {
     const hoje = new Date(); hoje.setHours(0,0,0,0);
-    let statusClass = 'badge-vigente';
-    let statusTexto = 'VIGENTE';
-    
-    let dFim = new Date(a.vigencia_fim); 
+    let dFim = new Date(a.vigencia_fim);
     if(a.vigencia_fim && a.vigencia_fim.includes('-')) {
         const parts = a.vigencia_fim.split('T')[0].split('-');
         dFim = new Date(parts[0], parts[1]-1, parts[2]);
     }
-
     const diffDays = Math.ceil((dFim - hoje) / (1000 * 60 * 60 * 24));
-
+    let statusClass = 'badge-vigente', statusTexto = 'VIGENTE';
     if (diffDays < 0) { statusClass = 'badge-vencida'; statusTexto = 'VENCIDA'; } 
     else if (diffDays >= 0 && diffDays <= 30) { statusClass = 'badge-avencer'; statusTexto = 'A VENCER'; }
 
@@ -410,19 +402,28 @@ function renderLinhaApolice(a, tbody) {
         <td>${a.cliente || 'Excluído'}</td>
         <td><span class="badge-placa">${a.placa || '-'}</span></td>
         <td>${a.numero_apolice || '-'}</td>
-        <td>${dFim.toLocaleDateString('pt-BR')} <br> <span class="badge ${statusClass}" style="margin-top:2px;">${statusTexto}</span></td>
+        <td>${dFim.toLocaleDateString('pt-BR')} <br><span class="badge ${statusClass}" style="font-size:9px;">${statusTexto}</span></td>
         <td>${valTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-        <td style="color:#00a86b; font-weight:bold;">${valComissao.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+        <td style="color:#00a86b; font-weight:bold;">${parseFloat(a.valor_comissao||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
         <td style="text-align:center;">
             <button class="action-btn btn-pdf-active" onclick="abrirPdfSeguro('${a.id}')" title="Ver PDF"><i class="fas fa-file-pdf"></i></button>
             <button class="action-btn btn-edit" onclick="window.location.href='apolice.html?id=${a.id}'" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="action-btn btn-delete" onclick="deletarItem('apolices', ${a.id})" title="Excluir"><i class="fas fa-trash"></i></button>
-        </td>
-    `;
+        </td>`;
     tbody.appendChild(tr);
 }
 
 function renderLinhaCliente(c, tbody) {
+    // LÓGICA DO BOTÃO DE OBSERVAÇÃO
+    let btnObs;
+    if (c.observacoes && c.observacoes.trim() !== "") {
+        // Escapa aspas para não quebrar o HTML do onclick
+        const obsTexto = c.observacoes.replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        btnObs = `<button class="action-btn btn-obs-on" onclick="verObservacao('${obsTexto}')" title="Ver Observação"><i class="fas fa-comment-dots"></i></button>`;
+    } else {
+        btnObs = `<button class="action-btn btn-obs-off" title="Sem observações" disabled><i class="fas fa-comment-slash"></i></button>`;
+    }
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>${c.nome || '-'}</td>
@@ -430,10 +431,10 @@ function renderLinhaCliente(c, tbody) {
         <td><span class="badge-placa">${c.placa || '-'}</span></td>
         <td>${c.modelo || c.modelo_veiculo || '-'}</td>
         <td style="text-align:center;">
+            ${btnObs}
             <button class="action-btn btn-edit" onclick="window.location.href='cadastro.html?id=${c.id}'" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="action-btn btn-delete" onclick="deletarItem('propostas', ${c.id})" title="Excluir"><i class="fas fa-trash"></i></button>
-        </td>
-    `;
+        </td>`;
     tbody.appendChild(tr);
 }
 
@@ -459,14 +460,23 @@ function renderLinhaUsuario(u, tbody) {
         <td style="text-align:center;">
             <button class="action-btn btn-edit" onclick="window.location.href='registro.html?id=${u.id}&origin=dashboard'" title="Editar"><i class="fas fa-edit"></i></button>
             ${isMaster ? `<button class="action-btn btn-delete" onclick="deletarItem('usuarios', ${u.id})" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
-        </td>
-    `;
+        </td>`;
     tbody.appendChild(tr);
 }
 
 // ==================================================
 // 8. FUNÇÕES DE AÇÃO
 // ==================================================
+
+// Nova função para exibir a observação
+window.verObservacao = function(texto) {
+    Swal.fire({
+        title: 'Observações Gerais',
+        text: texto,
+        icon: 'info',
+        confirmButtonColor: '#003366'
+    });
+};
 
 async function deletarItem(tipo, id) {
     const result = await Swal.fire({

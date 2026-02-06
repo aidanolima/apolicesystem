@@ -223,10 +223,23 @@
                         <label for="forma_pagamento">Forma de Pagamento</label>
                         <select id="forma_pagamento" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                             <option value="cartao_credito">Cartão de Crédito</option>
-                            <option value="pix">PIX</option>
                             <option value="boleto">Boleto Bancário</option>
                             <option value="debito">Débito em Conta</option>
+                            <option value="pix">PIX</option>
                         </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <h3 style="margin:0 0 20px 0; color:#4caf50; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <i class="fas fa-comment-alt"></i> 4. Observações Gerais
+            </h3>
+            
+            <fieldset style="border: 1px solid #ddd; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <div class="form-row">
+                    <div class="form-group" style="width: 100%;">
+                        <label for="observacoes">Informações Adicionais</label>
+                        <textarea id="observacoes" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;" placeholder="Digite aqui qualquer observação relevante sobre o cliente ou veículo..."></textarea>
                     </div>
                 </div>
             </fieldset>
@@ -249,9 +262,8 @@
         const idEdicao = urlParams.get('id');
         const token = localStorage.getItem('token');
 
-        // --- CORREÇÃO: MÁSCARA DINÂMICA CPF/CNPJ ---
+        // MÁSCARA DINÂMICA CPF/CNPJ
         $(document).ready(function(){
-            // Função que decide qual máscara usar baseado no tamanho do texto
             var CpfCnpjMaskBehavior = function (val) {
                 return val.replace(/\D/g, '').length <= 11 ? '000.000.000-009' : '00.000.000/0000-00';
             },
@@ -261,10 +273,7 @@
                 }
             };
 
-            // Aplica a máscara dinâmica ao campo documento
             $('#documento').mask(CpfCnpjMaskBehavior, cpfCnpjpOptions);
-            
-            // Outras máscaras fixas
             $('#telefone').mask('(00) 00000-0000');
             $('#cep').mask('00000-000');
             $('#cep_pernoite').mask('00000-000');
@@ -286,13 +295,11 @@
             });
 
             if (idEdicao) {
-                // Modo Edição
                 document.getElementById('titulo-pagina').innerText = `Editando Cliente #${idEdicao}`;
                 const btn = document.getElementById('btn-salvar');
                 btn.innerHTML = '<i class="fas fa-sync-alt"></i> ATUALIZAR CLIENTE';
                 btn.style.backgroundColor = "#ffa000"; 
                 
-                // Exibe loading imediatamente
                 Swal.fire({title: 'Carregando...', text: 'Buscando dados do cliente', didOpen: () => Swal.showLoading()});
                 carregarDadosCliente(idEdicao);
             }
@@ -357,7 +364,8 @@
                 cep_pernoite: document.getElementById('cep_pernoite').value,
                 cobertura_casco: document.getElementById('cobertura_casco').value,
                 carro_reserva: document.getElementById('carro_reserva').value,
-                forma_pagamento: document.getElementById('forma_pagamento').value
+                forma_pagamento: document.getElementById('forma_pagamento').value,
+                observacoes: document.getElementById('observacoes').value // NOVO CAMPO
             };
 
             const endpoint = idEdicao ? `${BASE_API}/propostas/${idEdicao}` : `${BASE_API}/cadastrar-proposta`;
@@ -430,8 +438,9 @@
                 document.getElementById('cobertura_casco').value = d.cobertura_casco || 100;
                 document.getElementById('carro_reserva').value = d.carro_reserva || 'nao';
                 document.getElementById('forma_pagamento').value = d.forma_pagamento || 'boleto';
+                document.getElementById('observacoes').value = d.observacoes || ''; // PREENCHIMENTO NOVO
 
-                Swal.close(); // Fecha o Loading
+                Swal.close(); 
             } catch (e) {
                 console.error(e);
                 Swal.fire('Erro', 'Não foi possível carregar os dados do cliente.', 'error');

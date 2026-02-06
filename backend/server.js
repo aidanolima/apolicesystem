@@ -442,7 +442,7 @@ app.delete('/apolices/:id', authenticateToken, async (req, res) => {
 });
 
 // ==================================================
-// 📄 PROPOSTAS (CLIENTES) - COM A CORREÇÃO DA ROTA DE EDIÇÃO
+// 📄 PROPOSTAS (CLIENTES) - COM ROTA DE LEITURA E OBSERVAÇÕES
 // ==================================================
 app.get('/propostas', authenticateToken, async (req, res) => { 
     try { 
@@ -483,15 +483,26 @@ app.post('/cadastrar-proposta', authenticateToken, async (req, res) => {
     try { 
         const d = req.body; 
         const usuarioId = req.user.id; 
-        await pool.query(`INSERT INTO propostas (nome, documento, email, telefone, placa, modelo, cep, endereco, bairro, cidade, uf, numero, complemento, fabricante, chassi, ano_modelo, fipe, utilizacao, blindado, kit_gas, zero_km, cep_pernoite, cobertura_casco, carro_reserva, forma_pagamento, usuario_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, 
-        [d.nome, d.documento, d.email, d.telefone, d.placa, d.modelo, d.cep, d.endereco, d.bairro, d.cidade, d.uf, d.numero, d.complemento, d.fabricante, d.chassi, d.ano_modelo, d.fipe, d.utilizacao, d.blindado, d.kit_gas, d.zero_km, d.cep_pernoite, d.cobertura_casco, d.carro_reserva, d.forma_pagamento, usuarioId]); 
+        // --- CAMPO OBSERVACOES ADICIONADO AO INSERT ---
+        await pool.query(`INSERT INTO propostas (nome, documento, email, telefone, placa, modelo, cep, endereco, bairro, cidade, uf, numero, complemento, fabricante, chassi, ano_modelo, fipe, utilizacao, blindado, kit_gas, zero_km, cep_pernoite, cobertura_casco, carro_reserva, forma_pagamento, observacoes, usuario_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, 
+        [d.nome, d.documento, d.email, d.telefone, d.placa, d.modelo, d.cep, d.endereco, d.bairro, d.cidade, d.uf, d.numero, d.complemento, d.fabricante, d.chassi, d.ano_modelo, d.fipe, d.utilizacao, d.blindado, d.kit_gas, d.zero_km, d.cep_pernoite, d.cobertura_casco, d.carro_reserva, d.forma_pagamento, d.observacoes, usuarioId]); 
         res.status(201).json({ message: "Criado" }); 
     } catch(e) { res.status(500).json({message: e.message}); }
 });
 
 app.put('/propostas/:id', authenticateToken, async (req, res) => {
-    try { const d = req.body; await pool.query(`UPDATE propostas SET nome=?, documento=?, email=?, telefone=?, placa=?, modelo=?, cep=?, endereco=?, bairro=?, cidade=?, uf=?, numero=?, complemento=?, fabricante=?, chassi=?, ano_modelo=?, fipe=?, utilizacao=?, blindado=?, kit_gas=?, zero_km=?, cep_pernoite=?, cobertura_casco=?, carro_reserva=?, forma_pagamento=? WHERE id=?`, [d.nome, d.documento, d.email, d.telefone, d.placa, d.modelo, d.cep, d.endereco, d.bairro, d.cidade, d.uf, d.numero, d.complemento, d.fabricante, d.chassi, d.ano_modelo, d.fipe, d.utilizacao, d.blindado, d.kit_gas, d.zero_km, d.cep_pernoite, d.cobertura_casco, d.carro_reserva, d.forma_pagamento, req.params.id]); res.json({ message: "Atualizado" }); } catch (e) { res.status(500).json({ error: e.message }); }
+    try { 
+        const d = req.body; 
+        if (!isMasterUser(req.user.tipo)) {
+            const [check] = await pool.query('SELECT id FROM propostas WHERE id = ? AND usuario_id = ?', [req.params.id, req.user.id]);
+            if (check.length === 0) return res.status(403).json({ message: "Acesso negado." });
+        }
+        // --- CAMPO OBSERVACOES ADICIONADO AO UPDATE ---
+        await pool.query(`UPDATE propostas SET nome=?, documento=?, email=?, telefone=?, placa=?, modelo=?, cep=?, endereco=?, bairro=?, cidade=?, uf=?, numero=?, complemento=?, fabricante=?, chassi=?, ano_modelo=?, fipe=?, utilizacao=?, blindado=?, kit_gas=?, zero_km=?, cep_pernoite=?, cobertura_casco=?, carro_reserva=?, forma_pagamento=?, observacoes=? WHERE id=?`, [d.nome, d.documento, d.email, d.telefone, d.placa, d.modelo, d.cep, d.endereco, d.bairro, d.cidade, d.uf, d.numero, d.complemento, d.fabricante, d.chassi, d.ano_modelo, d.fipe, d.utilizacao, d.blindado, d.kit_gas, d.zero_km, d.cep_pernoite, d.cobertura_casco, d.carro_reserva, d.forma_pagamento, d.observacoes, req.params.id]); 
+        res.json({ message: "Atualizado" }); 
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
 app.delete('/propostas/:id', authenticateToken, async (req, res) => { try { await pool.query('DELETE FROM propostas WHERE id = ?', [req.params.id]); res.json({ message: "Excluído" }); } catch (e) { res.status(500).json({ error: e.message }); }});
 
 app.post('/importar-pdf', authenticateToken, uploadMemory.any(), async (req, res) => {
