@@ -1,263 +1,246 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Clientes e Apólices | Acesso</title>
+    <title>Apólice System SAAS</title>
     
-    <meta name="description" content="Plataforma completa para gestão de clientes e apólices de seguro. Revolucione sua corretora.">
-    <meta name="theme-color" content="#003366">
-    
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.gestaoclienteseapolices.com.br/">
-    <meta property="og:title" content="Gestão de Clientes e Apólices">
-    <meta property="og:description" content="O futuro da gestão de seguros. Revolucione a forma como você gerencia suas apólices.">
-    <meta property="og:image" content="https://www.gestaoclienteseapolices.com.br/assets/logo.png">
-    
-    <link rel="manifest" href="manifest.json">
     <link rel="icon" href="assets/logo.png" type="image/png">
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <meta http-equiv="Content-Security-Policy" 
+    content="default-src * 'self' blob: data: gap:; 
+    style-src * 'self' 'unsafe-inline' blob: data: gap:; 
+    script-src * 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net blob: data: gap:; 
+    connect-src 'self' http://localhost:3000 https://seguradoraproject.onrender.com https://apolicesystem.onrender.com * 'unsafe-inline' blob: data: gap:;">
+
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
+    <script src="js/config.js"></script>
+
     <style>
+        /* Reset básico e tipografia */
         body, html {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            background-color: white;
+            height: 100%;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
         }
 
-        .login-main-container {
+        /* Container Principal Split Screen */
+        .split-container {
             display: flex;
-            height: 100vh;
+            min-height: 100vh;
             width: 100vw;
         }
 
-        .login-left-panel {
-            flex: 0 0 60%;
-            background-color: #003366;
+        /* === LADO ESQUERDO: MARKETING (60%) === */
+        .marketing-side {
+            flex: 6; /* 60% */
+            background: linear-gradient(135deg, #0e2a21 0%, #4CB191 100%);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 60px;
-            color: white;
+            justify-content: center;
+            padding: 40px;
             text-align: center;
-            box-sizing: border-box;
-            border-right: 1px solid rgba(255,255,255,0.1);
-            animation: fadeIn 1s ease-in-out;
+            color: white;
+            position: relative;
         }
 
-        .left-logo {
-            width: 250px;
-            height: auto;
+        /* Efeito sutil de brilho/padrão no fundo */
+        .marketing-side::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .marketing-logo {
+            max-width: 220px;
             margin-bottom: 40px;
+            z-index: 1;
         }
 
-        .left-headline {
-            font-size: 32px;
+        .marketing-title {
+            font-size: 2.5rem;
             font-weight: 800;
             margin-bottom: 20px;
             line-height: 1.2;
+            z-index: 1;
         }
 
-        .left-subheadline {
-            font-size: 18px;
-            color: rgba(255,255,255,0.8);
-            max-width: 500px;
-            line-height: 1.5;
+        .marketing-subtitle {
+            font-size: 1.2rem;
+            max-width: 80%;
+            line-height: 1.6;
+            opacity: 0.9;
+            z-index: 1;
         }
 
-        .login-right-panel {
-            flex: 1; 
-            background-color: white;
+        /* === LADO DIREITO: LOGIN (40%) === */
+        .login-side {
+            flex: 4; /* 40% */
+            background-color: #ffffff;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 50px;
-            box-sizing: border-box;
-            position: relative;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .form-content {
+        .login-card {
             width: 100%;
-            max-width: 360px;
+            max-width: 380px;
             text-align: center;
-            animation: fadeIn 1.2s ease-in-out;
         }
 
-        .login-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #003366;
-            margin-bottom: 30px;
+        .login-title { 
+            color: #0e2a21; 
+            font-size: 24px; 
+            margin-bottom: 40px; 
+            font-weight: 700; 
         }
 
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
+        .input-group { 
+            position: relative; 
+            margin-bottom: 20px; 
+            text-align: left; 
         }
-
-        .input-wrapper {
-            position: relative;
+        
+        .input-group i { 
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            left: 15px; 
+            color: #888; 
+            font-size: 14px; 
         }
-
-        .input-wrapper i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-            font-size: 16px;
-        }
-
-        input {
+        
+        .input-group input {
             width: 100%;
-            padding: 14px 14px 14px 40px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            box-sizing: border-box;
-            background-color: #F0F5FA;
-            color: #333;
+            padding: 14px 14px 14px 45px;
+            border: 1px solid #e0e0e0;
+            background-color: #f8fbf9;
+            border-radius: 6px;
+            font-size: 15px;
             transition: all 0.3s ease;
+            box-sizing: border-box;
+            color: #333;
         }
 
-        input:focus {
-            outline: none;
-            border-color: #003366;
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        .input-group input:focus { 
+            border-color: #4CB191; 
+            background-color: #ffffff;
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(76, 177, 145, 0.15);
         }
 
-        .btn-entrar {
+        .btn-login {
+            background-color: #4CB191;
+            color: white;
             width: 100%;
             padding: 14px;
-            background-color: #003366;
-            color: white;
+            font-size: 16px;
+            font-weight: bold;
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
+            border-radius: 6px;
             cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s;
+            margin-top: 15px;
+            transition: background 0.3s;
         }
-
-        .btn-entrar:hover {
-            background-color: #002244;
+        
+        .btn-login:hover { 
+            background-color: #3a9678; 
         }
-
-        .forgot-password {
-            display: block;
+        
+        .forgot-link {
+            display: inline-block;
             margin-top: 20px;
-            font-size: 13px;
             color: #666;
             text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
         }
-
-        .forgot-password:hover {
-            color: #003366;
+        
+        .forgot-link:hover {
+            color: #4CB191;
             text-decoration: underline;
         }
 
-        .footer-login {
-            position: absolute;
-            bottom: 20px;
-            font-size: 11px;
-            color: #999;
-            text-align: center;
-            width: 100%;
+        .footer-text { 
+            margin-top: 40px; 
+            font-size: 12px; 
+            color: #aaa; 
+            line-height: 1.5;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* === RESPONSIVIDADE PARA CELULARES === */
         @media (max-width: 900px) {
-            body, html {
-                overflow: auto;
-            }
-            .login-main-container {
+            .split-container {
                 flex-direction: column;
-                height: auto;
-                min-height: 100vh;
             }
-            .login-left-panel {
+            .marketing-side {
                 flex: none;
-                padding: 40px 20px;
-                border-right: none;
+                padding: 60px 20px;
             }
-            .left-logo {
-                width: 160px;
-                margin-bottom: 20px;
+            .marketing-title {
+                font-size: 2rem;
             }
-            .left-headline {
-                font-size: 24px;
-            }
-            .left-subheadline {
-                font-size: 15px;
-            }
-            .login-right-panel {
+            .login-side {
                 flex: 1;
                 padding: 40px 20px;
-                justify-content: flex-start;
-            }
-            .footer-login {
-                position: static;
-                margin-top: 50px;
-                padding-bottom: 20px;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="login-main-container">
-        <div class="login-left-panel">
-            <img src="assets/logo.png" alt="Logo Gestão de Clientes e Apólices" class="left-logo">
-            <h1 class="left-headline">O Futuro da Gestão de Clientes e Apólices</h1>
-            <p class="left-subheadline">Gerencie apólices, clientes e comissões em um único lugar, de forma rápida, segura e escalável.</p>
+    <div class="split-container">
+        <div class="marketing-side">
+            <img src="assets/logo.png" alt="Logo Apólice System" class="marketing-logo" onerror="this.style.display='none'">
+            <h1 class="marketing-title">O Futuro da Gestão de Clientes e Apólices</h1>
+            <p class="marketing-subtitle">
+                Gerencie apólices, clientes e comissões em um único lugar, de forma rápida, segura e escalável.
+            </p>
         </div>
 
-        <div class="login-right-panel">
-            <div class="form-content">
+        <div class="login-side">
+            <div class="login-card">
                 <h2 class="login-title">Acesse sua Conta</h2>
                 
                 <form id="form-login">
                     <div class="input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="email" placeholder="E-mail Corporativo" required>
-                        </div>
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" placeholder="E-mail Corporativo" required>
                     </div>
+                    
                     <div class="input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="senha" placeholder="Sua Senha" required>
-                        </div>
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="senha" placeholder="Sua Senha" required>
                     </div>
-                    <button type="submit" class="btn-entrar">ENTRAR</button>
-                    <a href="recuperar.html" class="forgot-password">Esqueci minha senha</a>
-                </form>
-            </div>
 
-            <div class="footer-login">
-                © 2026 Gestão de Clientes e Apólices.<br>
-                Todos os direitos reservados ASL TECH Aidano Lima.
+                    <button type="submit" class="btn-login">ENTRAR</button>
+                </form>        
+                
+                <a href="recuperar.html" class="forgot-link">Esqueci minha senha</a>
+
+                <p class="footer-text">
+                    &copy; 2026 Gestão de Clientes e Apólices.<br>
+                    Todos os direitos reservados ASL TECH Áidano Lima.
+                </p>
             </div>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-
     <script>
+        const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : window.location.origin;
+
         // Verifica se já está logado e redireciona
         if (localStorage.getItem('token')) {
             window.location.href = 'dashboard.html';
@@ -268,7 +251,7 @@
             
             const email = document.getElementById('email').value.trim();
             const senha = document.getElementById('senha').value.trim();
-            const btn = document.querySelector('.btn-entrar');
+            const btn = document.querySelector('.btn-login');
             const originalText = btn.innerText;
 
             if(!email || !senha) {
@@ -277,12 +260,11 @@
             }
 
             try {
-                // Estado de Carregamento
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
                 btn.disabled = true;
                 btn.style.opacity = '0.7';
 
-                const response = await fetch(`${API_URL}/login`, {
+                const response = await fetch(`${BASE_API}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, senha })
@@ -291,19 +273,16 @@
                 const data = await response.json(); 
 
                 if (response.ok) {
-                    // Login Sucesso: Salva tudo
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('usuario_logado', data.usuario.nome);
                     localStorage.setItem('tipo_usuario', data.usuario.tipo);
                     
-                    // Feedback Visual Rápido
                     const Toast = Swal.mixin({
                         toast: true, position: 'top-end', showConfirmButton: false, timer: 1000
                     });
                     
                     await Toast.fire({ icon: 'success', title: 'Login realizado!' });
                     
-                    // Redireciona
                     window.location.href = 'dashboard.html';
                 } else {
                     throw new Error(data.message || 'Dados inválidos');
@@ -312,7 +291,7 @@
                 console.error("Erro Login:", error);
                 
                 let msg = error.message;
-                if (msg.includes('Unexpected token') || msg.includes('JSON')) {
+                if (msg.includes('Unexpected token') || msg.includes('JSON') || msg.includes('Failed to fetch')) {
                     msg = "Erro de conexão com o servidor. Verifique se o Backend está rodando.";
                 }
 
@@ -320,7 +299,7 @@
                     icon: 'error', 
                     title: 'Acesso Negado', 
                     text: msg,
-                    confirmButtonColor: '#003366'
+                    confirmButtonColor: '#4CB191'
                 });
             } finally {
                 btn.innerText = originalText;
