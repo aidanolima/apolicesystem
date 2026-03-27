@@ -27,7 +27,7 @@
             display: flex !important;
             align-items: center !important;
             height: 100% !important;
-            background: transparent !important; /* Garante que não há fundo branco atrás */
+            background: transparent !important; 
         }
         
         .header-logo {
@@ -39,7 +39,6 @@
             margin-left: 15px !important;
             padding: 0 !important; 
             
-            /* A MÁGICA QUE REMOVE O "EFEITO FANTASMA" BRANCO */
             filter: none !important;
             -webkit-filter: none !important;
             mix-blend-mode: normal !important;
@@ -160,7 +159,7 @@
             selectTipo.disabled = true; 
         }
 
-        // --- PREVIEW DA FOTO LOCAL ---
+        // --- PREVIEW DA FOTO LOCAL E BANCO ---
         let urlFotoSalva = null; 
         const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>";
 
@@ -191,8 +190,9 @@
                 document.getElementById('nome').value = user.nome;
                 document.getElementById('email').value = user.email;
                 
-                if (user.url_foto) {
-                    urlFotoSalva = user.url_foto;
+                // --- CORREÇÃO: PUXANDO foto_perfil EM VEZ DE url_foto ---
+                if (user.foto_perfil) {
+                    urlFotoSalva = user.foto_perfil;
                     document.getElementById('preview-foto').src = urlFotoSalva;
                 }
                 if (isMaster) document.getElementById('tipo').value = user.tipo;
@@ -209,8 +209,8 @@
 
             try {
                 const inputFoto = document.getElementById('foto-perfil');
-                let urlFotoFinal = urlFotoSalva;
 
+                // Envia a foto SE o usuário selecionou um arquivo
                 if (inputFoto.files.length > 0) {
                     Swal.fire({ title: 'Enviando foto...', text: 'Aguarde...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                     
@@ -224,21 +224,20 @@
                     });
 
                     const uploadData = await uploadRes.json();
-                    if (uploadRes.ok) {
-                        urlFotoFinal = uploadData.url;
-                    } else {
+                    if (!uploadRes.ok) {
                         throw new Error(uploadData.message || "Falha ao enviar a foto.");
                     }
+                    // Não precisamos pegar a URL aqui, pois a rota no server.js já salva no banco de dados!
                 }
 
                 Swal.fire({ title: 'Salvando dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
+                // O campo foto foi removido do payload abaixo pois a rota de upload já cuidou de salvar no banco
                 const dados = {
                     nome: document.getElementById('nome').value,
                     email: document.getElementById('email').value,
                     senha: document.getElementById('senha').value,
-                    tipo: document.getElementById('tipo').value,
-                    url_foto: urlFotoFinal 
+                    tipo: document.getElementById('tipo').value
                 };
 
                 const endpoint = idEdicao ? `${BASE_API}/usuarios/${idEdicao}` : `${BASE_API}/registrar`;
