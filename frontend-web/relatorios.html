@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
+        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) --- */
+        .app-header { background-color: #0e2a21 !important; }
+
         /* --- CORREÇÃO DEFINITIVA DO LOGO NO HEADER --- */
         .header-brand, .header-brand a {
             display: flex !important;
@@ -103,11 +106,11 @@
             <h1 class="header-title" style="color:white; margin-left:15px;">Relatórios Gerenciais</h1>
         </div>
         <nav class="header-nav">
-            <a href="dashboard.html" class="header-link"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
+            <a href="dashboard.html" class="header-link" style="color: white; text-decoration: none;"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
         </nav>
         <div class="header-user-area">
             <div class="user-info">
-                <span class="user-name">Olá, <span id="user-name-display">...</span></span>
+                <span class="user-name" style="color: white;">Olá, <span id="user-name-display">...</span></span>
             </div>
             <button id="btn-logout" class="btn-logout-panel">SAIR</button>
         </div>
@@ -210,6 +213,13 @@
         }
         window.addEventListener('load', atualizarDataImpressao);
         window.onbeforeprint = atualizarDataImpressao;
+
+        // Limpar os dados do usuário ao sair
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace('index.html');
+        });
     </script>
 
     <script src="js/relatorios.js"></script>

@@ -19,13 +19,15 @@
     <script src="js/masks.js"></script> 
 
     <style>
+        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) --- */
+        .app-header { background-color: #0e2a21 !important; }
 
         /* --- CORREÇÃO DEFINITIVA DO LOGO NO HEADER --- */
         .header-brand, .header-brand a {
             display: flex !important;
             align-items: center !important;
             height: 100% !important;
-            background: transparent !important; /* Garante que não há fundo branco atrás */
+            background: transparent !important; 
         }
         
         .header-logo {
@@ -37,7 +39,6 @@
             margin-left: 15px !important;
             padding: 0 !important; 
             
-            /* A MÁGICA QUE REMOVE O "EFEITO FANTASMA" BRANCO */
             filter: none !important;
             -webkit-filter: none !important;
             mix-blend-mode: normal !important;
