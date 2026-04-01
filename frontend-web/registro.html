@@ -37,7 +37,7 @@
         }
         .password-container input {
             width: 100%;
-            padding-right: 40px; /* Espaço para o ícone não sobrepor o texto */
+            padding-right: 40px; 
             box-sizing: border-box;
         }
         .password-container i {
@@ -200,7 +200,6 @@
                 document.getElementById('nome').value = user.nome;
                 document.getElementById('email').value = user.email;
                 
-                // --- CORREÇÃO: PUXANDO foto_perfil EM VEZ DE url_foto ---
                 if (user.foto_perfil) {
                     urlFotoSalva = user.foto_perfil;
                     document.getElementById('preview-foto').src = urlFotoSalva;
@@ -226,6 +225,11 @@
                     
                     const formData = new FormData();
                     formData.append('foto', inputFoto.files[0]);
+                    
+                    // CORREÇÃO: Informar ao Backend qual usuário está recebendo a foto
+                    if (idEdicao) {
+                        formData.append('usuario_id', idEdicao); 
+                    }
 
                     const uploadRes = await fetch(`${BASE_API}/api/upload-perfil`, {
                         method: 'POST',

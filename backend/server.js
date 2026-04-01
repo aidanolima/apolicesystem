@@ -525,12 +525,18 @@ app.post('/api/upload-perfil', authenticateToken, uploadS3.any(), async (req, re
             fotoUrl = `/uploads/${req.files[0].filename}`; 
         }
         
-        console.log(`✅ Upload concluído no S3: ${fotoUrl}`);
+        console.log(`✅ Upload concluído no S3/Local: ${fotoUrl}`);
         
-        const usuarioId = req.user.id; 
-        await pool.query('UPDATE usuarios SET foto_perfil = ? WHERE id = ?', [fotoUrl, usuarioId]);
+        // ==========================================
+        // 🛠️ A MÁGICA ACONTECE AQUI:
+        // Se o frontend enviou o 'usuario_id' no corpo (edição de terceiros), usa ele.
+        // Se não enviou, significa que o usuário está criando/editando a própria conta, então usa o ID do token.
+        // ==========================================
+        const targetUserId = req.body.usuario_id ? req.body.usuario_id : req.user.id; 
         
-        console.log(`✅ Banco de Dados atualizado para o usuário ID: ${usuarioId}`);
+        await pool.query('UPDATE usuarios SET foto_perfil = ? WHERE id = ?', [fotoUrl, targetUserId]);
+        
+        console.log(`✅ Banco de Dados atualizado para o usuário ID: ${targetUserId}`);
         res.json({ message: "Foto atualizada com sucesso no perfil!", url: fotoUrl });
 
     } catch (error) {
