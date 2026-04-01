@@ -21,9 +21,16 @@
     --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
     --shadow-md: 0 4px 6px rgba(0,0,0,0.08);
     
-    /* Espaçamentos */
+    /* Espaçamentos e Layout */
     --radius: 8px;
     --header-height: 60px;
+    
+    /* Sidebar */
+    --sidebar-bg: #0e2a21;
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+    --sidebar-active: #4CB191;
+    --sidebar-text: #e0e0e0;
+    --sidebar-width: 260px;
 }
 
 * {
@@ -42,112 +49,29 @@ body {
 }
 
 /* =========================================
-   2. HEADER (Navegação Superior)
+   2. HEADER ANTIGO (Escondido)
    ========================================= */
-.app-header {
-    background-color: var(--primary-color);
-    height: var(--header-height);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    box-shadow: var(--shadow-md);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.header-brand {
-    display: flex;
-    align-items: center;
-}
-
-.header-logo {
-    height: 35px;
-    width: auto;
-    filter: brightness(0) invert(1); /* Deixa o logo branco se for png transparente */
-}
-
-.header-nav {
-    display: flex;
-    gap: 25px;
-    height: 100%;
-}
-
-.header-link {
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.header-link:hover {
-    color: #fff;
-}
-
-.header-link.active {
-    color: #fff;
-    border-bottom-color: var(--accent-color);
-}
-
-.header-user-area {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    color: white;
-}
-
-.user-info {
-    text-align: right;
-    line-height: 1.2;
-}
-
-.user-name {
-    display: block;
-    font-size: 13px;
-}
-
-.user-role {
-    display: block;
-    font-size: 11px;
-    opacity: 0.7;
-    font-weight: bold;
-}
-
-.btn-logout-panel {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white;
-    padding: 5px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    text-transform: uppercase;
-    transition: background 0.2s;
-}
-
-.btn-logout-panel:hover {
-    background: rgba(255,255,255,0.2);
-}
+.app-header { display: none !important; }
 
 /* =========================================
    3. LAYOUT E CARDS
    ========================================= */
+body.dashboard-body {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: #f4f6f9;
+}
+
 .main-container {
     flex: 1;
     margin-left: var(--sidebar-width);
-    /* Reduzi um pouco o padding e aumentei a largura máxima */
     padding: 20px 30px; 
     width: calc(100vw - var(--sidebar-width) - 20px); 
     max-width: 100%;
     transition: all 0.3s ease;
-    box-sizing: border-box; /* Garante que o padding não estoure a largura */
+    box-sizing: border-box;
 }
 
 .card {
@@ -157,11 +81,10 @@ body {
     padding: 25px;
     margin-bottom: 25px;
     border: 1px solid var(--border-color);
-    position: relative; /* Para bordas coloridas no topo */
+    position: relative; 
     overflow: hidden;
 }
 
-/* Títulos de Seção */
 h2 {
     font-size: 22px;
     font-weight: 600;
@@ -227,7 +150,7 @@ input[type="date"],
 input[type="password"],
 input[type="email"],
 select {
-    height: 42px; /* Altura confortável para clique */
+    height: 42px; 
     padding: 8px 12px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -238,21 +161,18 @@ select {
     width: 100%;
 }
 
-/* Efeito de Foco (Glow Azul) */
 input:focus, select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
     outline: none;
 }
 
-/* Campos somente leitura ou desabilitados */
 input:disabled, select:disabled {
     background-color: #f8f9fa;
     color: #999;
     cursor: not-allowed;
 }
 
-/* Campo Especial de Total (Destaque) */
 #premio_total {
     background-color: #e8f5e9;
     color: var(--accent-dark);
@@ -260,7 +180,6 @@ input:disabled, select:disabled {
     border-color: #c8e6c9;
 }
 
-/* Upload de Arquivo Estilizado */
 input[type="file"] {
     padding: 10px;
     background: #f8f9fa;
@@ -288,7 +207,6 @@ button {
     gap: 8px;
 }
 
-/* Botão Salvar (Principal) */
 .btn-novo {
     background-color: var(--accent-color);
     color: white;
@@ -312,7 +230,6 @@ button {
     transform: translateY(0);
 }
 
-/* Botão Processar PDF (Secundário) */
 .btn-processar {
     background-color: var(--primary-color);
     color: white;
@@ -356,10 +273,17 @@ tbody td {
 }
 
 tbody tr:hover {
-    background-color: #f4f6f9; /* Destaque ao passar o mouse */
+    background-color: #f4f6f9; 
 }
 
-/* Ações da Tabela */
+/* --- Ajuste Fino para a Coluna de Ações (Impede quebra de linha) --- */
+.tabela-crud th:last-child,
+.tabela-crud td:last-child {
+    white-space: nowrap !important;
+    width: 1%;
+    text-align: center;
+}
+
 .action-btn {
     padding: 6px 10px;
     border-radius: 4px;
@@ -367,7 +291,9 @@ tbody tr:hover {
     font-size: 12px;
     margin-right: 5px;
     text-decoration: none;
+    margin: 0 3px !important;
 }
+
 .btn-edit { background-color: #1976d2; }
 .btn-delete { background-color: #d32f2f; }
 .btn-pdf { background-color: #757575; }
@@ -386,34 +312,21 @@ tbody tr:hover {
 }
 
 /* =========================================
-   8. RESPONSIVIDADE (Mobile)
+   8. CARDS DE ESTATÍSTICAS (DASHBOARD)
    ========================================= */
-@media (max-width: 768px) {
-    .header-nav { display: none; } /* Esconde menu no mobile por enquanto */
-    .form-row { flex-direction: column; gap: 10px; }
-    .main-container { padding: 10px; }
-    h2 { font-size: 18px; }
-}
-
-/* =========================================
-   9. CARDS DE ESTATÍSTICAS (DASHBOARD) - CORRIGIDO
-   ========================================= */
-
-/* Container dos Cards */
 .stats-container {
-    display: flex; /* Mudado de Grid para Flex para alinhar melhor */
+    display: flex; 
     justify-content: space-between;
-    gap: 12px; /* Espaço equilibrado */
-    flex-wrap: wrap; /* Permite quebra apenas em telas muito pequenas (celular) */
+    gap: 12px; 
+    flex-wrap: wrap; 
     margin-bottom: 30px;
 }
 
-/* Estilo Base do Stat Card */
 .stat-card {
-    flex: 1; /* Ocupa espaço igual */
-    min-width: 150px; /* Permite que fiquem 5 na mesma linha em telas normais */
+    flex: 1; 
+    min-width: 150px; 
     background: #fff;
-    padding: 15px; /* Padding levemente reduzido */
+    padding: 15px; 
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     border-left: 5px solid transparent; 
@@ -421,7 +334,7 @@ tbody tr:hover {
     align-items: center;
     justify-content: space-between;
     transition: transform 0.2s, box-shadow 0.2s;
-    overflow: hidden; /* Garante que o texto não saia do card */
+    overflow: hidden; 
 }
 
 .stat-card:hover {
@@ -429,33 +342,31 @@ tbody tr:hover {
     box-shadow: var(--shadow-md);
 }
 
-/* Área de Texto (Protegida contra quebra) */
 .stat-info {
     flex: 1;
-    min-width: 0; /* Truque CSS: permite encolher o texto se faltar espaço */
+    min-width: 0; 
 }
 
 .stat-info h3 {
     margin: 0;
-    font-size: 1.4em !important; /* Tamanho ideal (aprox 22px) */
+    font-size: 1.4em !important; 
     font-weight: 800;
     color: var(--text-main);
-    white-space: nowrap; /* Impede quebra de linha */
+    white-space: nowrap; 
     overflow: hidden;
-    text-overflow: ellipsis; /* Coloca "..." se o valor for infinito */
+    text-overflow: ellipsis; 
     border: none;
     padding: 0;
 }
 
-/* AJUSTE FINO PARA O CARD DE COMISSÃO (VALORES LONGOS) */
 .stat-card.money .stat-info h3 {
-    font-size: 1.25em !important; /* Levemente menor para caber "R$ 10.000,00" */
+    font-size: 1.25em !important; 
     color: #28a745;
 }
 
 .stat-info p {
     margin: 0;
-    font-size: 0.75em !important; /* Legenda compacta */
+    font-size: 0.75em !important; 
     color: var(--text-muted);
     text-transform: uppercase;
     font-weight: 700;
@@ -463,32 +374,26 @@ tbody tr:hover {
     white-space: nowrap;
 }
 
-/* Ícone */
 .stat-icon {
-    font-size: 2em; /* Tamanho visualmente agradável */
+    font-size: 2em; 
     opacity: 0.8;
     margin-left: 10px;
-    flex-shrink: 0; /* IMPORTANTE: O ícone nunca vai ser esmagado */
+    flex-shrink: 0; 
 }
 
-/* Cores Específicas */
 .stat-card.green { border-left: 5px solid #00a86b !important; }
 .stat-card.green .stat-icon { color: #00a86b !important; }
-
 .stat-card.blue { border-left: 5px solid #1976d2 !important; }
 .stat-card.blue .stat-icon { color: #1976d2 !important; }
-
 .stat-card.orange { border-left: 5px solid #ffa000 !important; }
 .stat-card.orange .stat-icon { color: #ffa000 !important; }
-
 .stat-card.purple { border-left: 5px solid #7b1fa2 !important; }
 .stat-card.purple .stat-icon { color: #7b1fa2 !important; }
-
 .stat-card.money { border-left: 5px solid #28a745 !important; background: #fff; }
 .stat-card.money .stat-icon { color: #28a745 !important; }
 
 /* =========================================
-   10. PAGINAÇÃO (NOVO)
+   9. PAGINAÇÃO
    ========================================= */
 .pagination-container {
     display: flex;
@@ -499,15 +404,8 @@ tbody tr:hover {
     margin-top: 10px;
 }
 
-.pagination-info {
-    font-size: 13px;
-    color: #666;
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 5px;
-}
+.pagination-info { font-size: 13px; color: #666; }
+.pagination-controls { display: flex; gap: 5px; }
 
 .page-btn {
     background: #fff;
@@ -540,37 +438,8 @@ tbody tr:hover {
 }
 
 /* =========================================
-   ESTRUTURA DA SIDEBAR (MENU LATERAL)
+   10. ESTRUTURA DA SIDEBAR (MENU LATERAL)
    ========================================= */
-
-/* Variáveis de cor (Verde Escuro da ASL) */
-:root {
-    --sidebar-bg: #0e2a21;
-    --sidebar-hover: rgba(255, 255, 255, 0.1);
-    --sidebar-active: #4CB191;
-    --sidebar-text: #e0e0e0;
-    --sidebar-width: 260px;
-}
-
-/* Reset de layout principal para acomodar a sidebar */
-body.dashboard-body {
-    display: flex;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background-color: #f4f6f9;
-}
-
-/* O container principal agora tem margem à esquerda */
-.main-container {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    padding: 30px;
-    width: calc(100% - var(--sidebar-width));
-    transition: all 0.3s ease;
-}
-
-/* A Sidebar em si */
 .app-sidebar {
     width: var(--sidebar-width);
     background-color: var(--sidebar-bg);
@@ -600,13 +469,23 @@ body.dashboard-body {
 .sidebar-logo {
     display: block !important;
     visibility: visible !important;
-    max-width: 90px !important; /* Ajuste o tamanho aqui se quiser maior ou menor */
+    max-width: 90px !important; 
     height: auto !important;
     margin: 0 auto 15px auto !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     filter: none !important;
     opacity: 1 !important;
+}
+
+.sidebar-title {
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0;
+    text-align: center;
 }
 
 .sidebar-nav {
@@ -652,63 +531,15 @@ body.dashboard-body {
     background-color: rgba(0,0,0,0.15);
 }
 
-.sidebar-user-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.user-avatar {
-    font-size: 35px;
-    color: var(--sidebar-active);
-    margin-right: 12px;
-}
-
-.user-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-name {
-    font-weight: bold;
-    font-size: 15px;
-    color: white;
-}
-
-.user-role {
-    font-size: 12px;
-    color: #aaa;
-}
-
-.sidebar-logout {
-    width: 100%;
-    padding: 10px;
-    background-color: #d32f2f;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    transition: 0.2s;
-}
-
-.sidebar-logout:hover {
-    background-color: #b71c1c;
-}
-
-/* Esconde Navbar Antiga caso ainda exista lixo no HTML */
-.app-header { display: none !important; }
-
-/* === MOBILE === */
+/* =========================================
+   11. MOBILE (SIDEBAR NA DIREITA E SANDUÍCHE)
+   ========================================= */
 .mobile-toggle {
     display: none;
     position: fixed;
     top: 15px;
-    left: 15px;
+    right: 15px; /* Movido para a Direita */
+    left: auto;
     z-index: 999;
     background-color: var(--sidebar-bg);
     color: white;
@@ -730,19 +561,34 @@ body.dashboard-body {
 }
 
 @media (max-width: 992px) {
-    .main-container { margin-left: 0; width: 100%; padding-top: 70px; }
-    .app-sidebar { transform: translateX(-100%); }
-    .app-sidebar.open { transform: translateX(0); }
+    .main-container { 
+        margin-left: 0; 
+        width: 100%; 
+        padding-top: 70px; 
+    }
+    
+    /* Ajuste da Sidebar para Mobile (Fixa na Direita) */
+    .app-sidebar { 
+        left: auto !important; 
+        right: 0 !important; 
+        transform: translateX(100%); /* Esconde para a direita */
+        top: 0 !important;
+        bottom: 0 !important;
+        height: 100% !important; 
+        height: 100dvh !important; /* Altura dinâmica para não cortar */
+        box-shadow: -4px 0 15px rgba(0,0,0,0.1); 
+    }
+    
+    .app-sidebar.open { 
+        transform: translateX(0); /* Desliza para a tela */
+    }
+    
     .mobile-toggle { display: block; }
     .sidebar-overlay.open { display: block; }
 }
 
-.sidebar-title {
-    color: white;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin: 0;
-    text-align: center;
+@media (max-width: 768px) {
+    .form-row { flex-direction: column; gap: 10px; }
+    .main-container { padding: 10px; }
+    h2 { font-size: 18px; }
 }
