@@ -27,6 +27,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
+        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) --- */
+        .app-header {
+            background-color: #0e2a21 !important;
+        }
+
         /* --- LAYOUT DOS CARDS --- */
         .stats-container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-right: 5px; }
         .stat-card { flex: 1; min-width: 150px; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
@@ -74,8 +79,10 @@
         .pagination-info { font-size: 13px; color: #666; }
         .pagination-controls { display: flex; gap: 5px; }
         .page-btn { background: #fff; border: 1px solid #ddd; color: #333; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
-        .page-btn:hover:not(:disabled) { background-color: #003366; color: white; border-color: #003366; }
-        .page-btn.active { background-color: #003366; color: white; border-color: #003366; font-weight: bold; }
+        
+        /* Corrigido para Verde Escuro na Paginação */
+        .page-btn:hover:not(:disabled) { background-color: #0e2a21; color: white; border-color: #0e2a21; }
+        .page-btn.active { background-color: #0e2a21; color: white; border-color: #0e2a21; font-weight: bold; }
         .page-btn:disabled { background-color: #f4f4f4; color: #ccc; cursor: not-allowed; }
 
         .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px; }
@@ -109,14 +116,18 @@
         @media (max-width: 992px) {
             .app-header { justify-content: space-between; padding: 0 15px; position: relative; z-index: 10005; }
             .mobile-menu-btn { display: block; }
-            .header-nav { position: fixed !important; top: 0 !important; left: 0 !important; width: 280px !important; height: 100vh !important; background-color: #003366 !important; flex-direction: column !important; padding: 0; box-shadow: 4px 0 15px rgba(0,0,0,0.5); transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 10006 !important; justify-content: flex-start !important; overflow-y: auto; display: flex !important; }
+            /* Corrigido para Verde Escuro no Menu Mobile */
+            .header-nav { position: fixed !important; top: 0 !important; left: 0 !important; width: 280px !important; height: 100vh !important; background-color: #0e2a21 !important; flex-direction: column !important; padding: 0; box-shadow: 4px 0 15px rgba(0,0,0,0.5); transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 10006 !important; justify-content: flex-start !important; overflow-y: auto; display: flex !important; }
             .header-nav.active { transform: translateX(0) !important; }
             .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: rgba(0,0,0,0.2); margin-bottom: 10px; }
             .sidebar-logo { display: block; height: 40px; width: auto; object-fit: contain; }
             .close-menu-btn { display: block; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
             .header-link { display: block; padding: 18px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); width: 100%; text-align: left; color: #e0e0e0 !important; text-decoration: none; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
             .header-link:hover { background-color: rgba(255,255,255,0.1); color: #fff !important; }
-            .header-link.active { background-color: rgba(255,255,255,0.15); color: #fff !important; font-weight: 700; border-left: 4px solid #ff9800; }
+            
+            /* Corrigido para Verde Claro na Aba Ativa do Menu Mobile */
+            .header-link.active { background-color: rgba(255,255,255,0.15); color: #fff !important; font-weight: 700; border-left: 4px solid #4CB191; }
+            
             .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; backdrop-filter: blur(3px); }
             .menu-overlay.active { display: block; }
             .user-info { display: none; }
