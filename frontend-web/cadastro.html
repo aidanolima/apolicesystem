@@ -30,28 +30,7 @@
 </head>
 <body class="dashboard-body">
 
-    <header class="app-header">
-        <div class="header-brand">
-            <a href="dashboard.html">
-                <img src="assets/logo.png" alt="Logo" class="header-logo">
-            </a>
-        </div>
-
-        <nav class="header-nav">
-            <a href="dashboard.html" class="header-link active">PROPOSTAS</a>
-            <a href="apolice.html" class="header-link">APÓLICES</a>
-            <a href="registro.html?origin=dashboard" class="header-link">USUÁRIOS</a>
-            <a href="relatorios.html" class="header-link">RELATÓRIOS</a>
-        </nav>
-
-        <div class="header-user-area">
-            <div class="user-info">
-                <span class="user-name">Olá, <strong id="user-name-display">Visitante</strong></span>
-                <span class="user-role" id="user-role-display">...</span>
-            </div>
-            <button id="btn-logout" class="btn-logout-panel">SAIR</button>
-        </div>
-    </header>
+    <div id="sidebar-container"></div>
 
     <div class="main-container">
         
@@ -92,7 +71,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="cep">CEP</label>
-                        <input type="text" id="cep" class="form-control mask-cep" placeholder="00000-000" maxlength="9" placeholder="00000-000" onblur="buscarEndereco(this.value)" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <input type="text" id="cep" class="form-control mask-cep" placeholder="00000-000" maxlength="9" onblur="buscarEndereco(this.value)" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                     <div class="form-group" style="flex: 2;">
                         <label for="endereco">Endereço</label>
@@ -170,7 +149,6 @@
                             <option value="moto">Motocicleta</option>                            
                             <option value="aplicativo">Motorista de Aplicativo</option>
                             <option value="taxi">Motorista de Taxi</option>
-
                         </select>
                     </div>
                 </div>
@@ -254,6 +232,8 @@
         </div>
     </div>
 
+    <script src="js/sidebar.js"></script>
+
     <script>
         // Configuração Inicial
         const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
@@ -286,14 +266,6 @@
             const nomeUser = localStorage.getItem('usuario_logado');
             const tipoUser = localStorage.getItem('tipo_usuario');
             
-            if (nomeUser) document.getElementById('user-name-display').innerText = nomeUser.split(' ')[0];
-            if (tipoUser) document.getElementById('user-role-display').innerText = tipoUser.toUpperCase();
-
-            document.getElementById('btn-logout').addEventListener('click', function() {
-                localStorage.clear();
-                window.location.href = 'index.html';
-            });
-
             if (idEdicao) {
                 document.getElementById('titulo-pagina').innerText = `Editando Cliente #${idEdicao}`;
                 const btn = document.getElementById('btn-salvar');

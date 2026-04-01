@@ -3,53 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperação de Acesso | Seguradora</title>
+    <title>Recuperação de Acesso | Apólice System</title>
+    
+    <link rel="icon" href="assets/logo.png" type="image/png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/config.js"></script>
+
     <style>
-        body.login-body { background-color: #f4f6f8; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
-        .login-container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .form-group { margin-bottom: 20px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        .btn-enviar { width: 100%; padding: 12px; background-color: #2e7d32; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .btn-enviar:disabled { background-color: #ccc; cursor: not-allowed; }
+        /* Reset básico e tipografia */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Container Principal Split Screen */
+        .split-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        /* === LADO ESQUERDO: MARKETING (60%) === */
+        .marketing-side {
+            flex: 6; /* 60% */
+            background: linear-gradient(135deg, #0e2a21 0%, #4CB191 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        /* Efeito sutil de brilho/padrão no fundo */
+        .marketing-side::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .marketing-logo {
+            max-width: 220px;
+            margin-bottom: 40px;
+            z-index: 1;
+        }
+
+        .marketing-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            z-index: 1;
+        }
+
+        .marketing-subtitle {
+            font-size: 1.2rem;
+            max-width: 80%;
+            line-height: 1.6;
+            opacity: 0.9;
+            z-index: 1;
+        }
+
+        /* === LADO DIREITO: FORMULÁRIO (40%) === */
+        .login-side {
+            flex: 4; /* 40% */
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+
+        .login-title { 
+            color: #0e2a21; 
+            font-size: 24px; 
+            margin-bottom: 10px; 
+            font-weight: 700; 
+        }
+
+        .login-subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .icon-lock {
+            font-size: 40px;
+            color: #4CB191;
+            margin-bottom: 15px;
+        }
+
+        .input-group { 
+            position: relative; 
+            margin-bottom: 20px; 
+            text-align: left; 
+        }
+        
+        .input-group i.fa-envelope { 
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            left: 15px; 
+            color: #888; 
+            font-size: 14px; 
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 14px 14px 14px 45px;
+            border: 1px solid #e0e0e0;
+            background-color: #f8fbf9;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .input-group input:focus { 
+            border-color: #4CB191; 
+            background-color: #ffffff;
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(76, 177, 145, 0.15);
+        }
+
+        .btn-enviar {
+            background-color: #4CB191;
+            color: white;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        
+        .btn-enviar:hover:not(:disabled) { 
+            background-color: #3a9678; 
+        }
+
+        .btn-enviar:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .forgot-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+            font-weight: 600;
+        }
+        
+        .forgot-link:hover {
+            color: #4CB191;
+        }
+
+        .footer-text { 
+            margin-top: 40px; 
+            font-size: 12px; 
+            color: #aaa; 
+            line-height: 1.5;
+        }
+
+        /* === RESPONSIVIDADE PARA CELULARES === */
+        @media (max-width: 900px) {
+            .split-container {
+                flex-direction: column;
+            }
+            .marketing-side {
+                flex: none;
+                padding: 60px 20px;
+            }
+            .marketing-title {
+                font-size: 2rem;
+            }
+            .login-side {
+                flex: 1;
+                padding: 40px 20px;
+            }
+        }
     </style>
 </head>
-<body class="login-body">
-    <div class="login-container">
-        <div style="font-size: 48px; color: #2e7d32; margin-bottom: 10px;"><i class="fas fa-lock"></i></div>
-        <h1>Recuperação de Senha</h1>
-        <p style="color: #666; margin-bottom: 25px;">Informe o e-mail da sua conta para receber as instruções.</p>
+<body>
 
-        <form id="form-recuperar">
-            <div class="form-group">
-                <label>E-mail Cadastrado</label>
-                <input type="email" id="email_input" placeholder="seu.email@exemplo.com" required>
+    <div class="split-container">
+        <div class="marketing-side">
+            <img src="assets/logo.png" alt="Logo Apólice System" class="marketing-logo" onerror="this.style.display='none'">
+            <h1 class="marketing-title">O Futuro da Gestão de Clientes e Apólices</h1>
+            <p class="marketing-subtitle">
+                Corretores de seguros, gerencie apólices, clientes e comissões em um único lugar, de forma rápida, segura e escalável.
+            </p>
+        </div>
+
+        <div class="login-side">
+            <div class="login-card">
+                
+                <i class="fas fa-lock icon-lock"></i>
+                <h2 class="login-title">Recuperação de Senha</h2>
+                <p class="login-subtitle">Informe o e-mail da sua conta para receber as instruções.</p>
+                
+                <form id="form-recuperar">
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email_input" placeholder="seu.email@exemplo.com" required>
+                    </div>
+
+                    <button type="submit" id="btn-submit" class="btn-enviar">ENVIAR INSTRUÇÕES</button>
+                </form>        
+                
+                <a href="index.html" class="forgot-link"><i class="fas fa-arrow-left"></i> Voltar para o Login</a>
+
+                <p class="footer-text">
+                    &copy; 2026 Gestão de Clientes e Apólices.<br>
+                    Todos os direitos reservados ASL TECH Áidano Lima.
+                </p>
             </div>
-            <button type="submit" id="btn-submit" class="btn-enviar">Enviar Instruções</button>
-        </form>
-
-        <div style="margin-top: 20px;"><a href="index.html" style="text-decoration: none; color: #1976d2;"><i class="fas fa-arrow-left"></i> Voltar para o Login</a></div>
+        </div>
     </div>
 
-    <script src="js/config.js"></script>
     <script>
+        const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : window.location.origin;
+
         document.getElementById('form-recuperar').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const email = document.getElementById('email_input').value.trim();
             const btn = document.getElementById('btn-submit');
+            const originalText = btn.innerText;
 
             // Feedback visual
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-            console.log("Tentando conectar em:", `${API_URL}/forgot-password`);
+            console.log("Tentando conectar em:", `${BASE_API}/forgot-password`);
 
             try {
-                const response = await fetch(`${API_URL}/forgot-password`, {
+                const response = await fetch(`${BASE_API}/forgot-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email })
@@ -58,16 +269,33 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    Swal.fire('Sucesso!', 'E-mail enviado! Verifique sua caixa de entrada e SPAM.', 'success');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'E-mail enviado! Verifique sua caixa de entrada e SPAM.',
+                        confirmButtonColor: '#4CB191'
+                    }).then(() => {
+                        window.location.href = 'index.html'; // Volta pro login após o sucesso
+                    });
                 } else {
-                    Swal.fire('Atenção', result.message || 'Erro ao processar.', 'warning');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atenção',
+                        text: result.message || 'Erro ao processar.',
+                        confirmButtonColor: '#4CB191'
+                    });
                 }
             } catch (error) {
                 console.error("Erro na chamada:", error);
-                Swal.fire('Erro técnico', 'O servidor não respondeu. Verifique se o Render está online.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro técnico',
+                    text: 'O servidor não respondeu. Verifique se o backend está online.',
+                    confirmButtonColor: '#d33'
+                });
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Enviar Instruções';
+                btn.innerText = originalText;
             }
         });
     </script>

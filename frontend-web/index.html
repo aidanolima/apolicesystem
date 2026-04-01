@@ -6,7 +6,7 @@
     <meta http-equiv="Expires" content="0">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apólice System SAAS</title>
+    <title>Apólice System</title>
     
     <link rel="icon" href="assets/logo.png" type="image/png">
     
@@ -100,6 +100,13 @@
             text-align: center;
         }
 
+        /* Novo ícone de cadeado igual ao da recuperação */
+        .icon-lock {
+            font-size: 40px;
+            color: #4CB191;
+            margin-bottom: 15px;
+        }
+
         .login-title { 
             color: #0e2a21; 
             font-size: 24px; 
@@ -113,7 +120,7 @@
             text-align: left; 
         }
         
-        .input-group i { 
+        .input-group i.fa-envelope, .input-group i.fa-lock { 
             position: absolute; 
             top: 50%; 
             transform: translateY(-50%); 
@@ -124,7 +131,7 @@
         
         .input-group input {
             width: 100%;
-            padding: 14px 14px 14px 45px;
+            padding: 14px 45px 14px 45px; /* Adicionado padding na direita para o olho */
             border: 1px solid #e0e0e0;
             background-color: #f8fbf9;
             border-radius: 6px;
@@ -139,6 +146,22 @@
             background-color: #ffffff;
             outline: none; 
             box-shadow: 0 0 0 3px rgba(76, 177, 145, 0.15);
+        }
+
+        /* Estilo para o ícone do olho */
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 15px;
+            color: #888;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #4CB191;
         }
 
         .btn-login {
@@ -212,6 +235,8 @@
 
         <div class="login-side">
             <div class="login-card">
+                
+                <i class="fas fa-lock icon-lock"></i>
                 <h2 class="login-title">Acesse sua Conta</h2>
                 
                 <form id="form-login">
@@ -223,6 +248,7 @@
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
                         <input type="password" id="senha" placeholder="Sua Senha" required>
+                        <i class="fas fa-eye toggle-password" id="toggle-senha-login" title="Mostrar/Ocultar Senha"></i>
                     </div>
 
                     <button type="submit" class="btn-login">ENTRAR</button>
@@ -245,6 +271,20 @@
         if (localStorage.getItem('token')) {
             window.location.href = 'dashboard.html';
         }
+
+        // Lógica do olho da senha
+        document.getElementById('toggle-senha-login').addEventListener('click', function() {
+            const inputSenha = document.getElementById('senha');
+            if (inputSenha.type === 'password') {
+                inputSenha.type = 'text';
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                inputSenha.type = 'password';
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
+            }
+        });
 
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();

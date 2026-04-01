@@ -15,37 +15,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) --- */
-        .app-header { background-color: #0e2a21 !important; }
-
-        /* --- CORREÇÃO DEFINITIVA DO LOGO NO HEADER --- */
-        .header-brand, .header-brand a {
-            display: flex !important;
-            align-items: center !important;
-            height: 100% !important;
-            background: transparent !important; /* Garante que não há fundo branco atrás */
-        }
-        
-        .header-logo {
-            height: 50px !important; 
-            width: auto !important;
-            border-radius: 0 !important; 
-            background: transparent !important; 
-            object-fit: contain !important;
-            margin-left: 15px !important;
-            padding: 0 !important; 
-            
-            /* A MÁGICA QUE REMOVE O "EFEITO FANTASMA" BRANCO */
-            filter: none !important;
-            -webkit-filter: none !important;
-            mix-blend-mode: normal !important;
-            box-shadow: none !important;
-        }
         /* --- ESTILOS DE TELA (PADRÃO) --- */
         .filter-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
         .filter-buttons { display: flex; gap: 10px; justify-content: flex-end; }
         
         .btn-action { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; display: flex; align-items: center; gap: 8px; }
@@ -55,7 +29,7 @@
         .btn-clear { background-color: #d32f2f; }
         .btn-action:hover { opacity: 0.9; }
 
-        .report-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; } /* Fonte levemente menor para caber colunas */
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; } 
         .report-table th, .report-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
         .report-table th { background-color: #f8f9fa; color: #333; font-weight: bold; border-bottom: 2px solid #ddd; white-space: nowrap; }
         
@@ -66,7 +40,7 @@
 
         /* --- ESTILOS DE IMPRESSÃO --- */
         @media print {
-            @page { size: A4 landscape; margin: 1cm; } /* Paisagem para caber colunas financeiras */
+            @page { size: A4 landscape; margin: 1cm; } 
             body { 
                 background: white; 
                 font-family: 'Arial', sans-serif; 
@@ -75,7 +49,7 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .app-header, .filter-card, .system-credits, .filter-buttons, #btn-logout { display: none !important; }
+            .app-sidebar, .filter-card, .system-credits, .filter-buttons, #btn-logout, .screen-title { display: none !important; }
             .main-container { margin: 0; padding: 0; width: 100%; }
             .results-card { box-shadow: none; border: none; padding: 0; }
             .print-header { 
@@ -98,26 +72,17 @@
         }
     </style>
 </head>
-<body>
+<body class="dashboard-body">
 
-    <header class="app-header">
-        <div class="header-brand">
-            <a href="dashboard.html"><img src="assets/logo.png" alt="Logo" class="header-logo"></a>
-            <h1 class="header-title" style="color:white; margin-left:15px;">Relatórios Gerenciais</h1>
-        </div>
-        <nav class="header-nav">
-            <a href="dashboard.html" class="header-link" style="color: white; text-decoration: none;"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
-        </nav>
-        <div class="header-user-area">
-            <div class="user-info">
-                <span class="user-name" style="color: white;">Olá, <span id="user-name-display">...</span></span>
-            </div>
-            <button id="btn-logout" class="btn-logout-panel">SAIR</button>
-        </div>
-    </header>
+    <div id="sidebar-container"></div>
 
     <div class="main-container">
         
+        <div class="screen-title" style="margin-bottom: 20px; border-left: 5px solid #1976d2; padding-left: 15px;">
+            <h2 style="color: #444; margin:0;" id="titulo-pagina">Emissão de Relatórios</h2>
+            <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Filtre, gere e exporte os dados da sua carteira de clientes e apólices.</p>
+        </div>
+
         <div class="print-header">
             <img src="assets/logo.png" alt="Logo Empresa" class="print-logo">
             <div class="print-info">
@@ -203,6 +168,8 @@
         <div class="system-credits" style="text-align: center; margin-top:20px; color:#999;">By Áidano Lima - ASL TECH</div>
     </div>
 
+    <script src="js/sidebar.js"></script>
+
     <script>
         function atualizarDataImpressao() {
             const agora = new Date();
@@ -214,12 +181,6 @@
         window.addEventListener('load', atualizarDataImpressao);
         window.onbeforeprint = atualizarDataImpressao;
 
-        // Limpar os dados do usuário ao sair
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.replace('index.html');
-        });
     </script>
 
     <script src="js/relatorios.js"></script>

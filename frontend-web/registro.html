@@ -21,31 +21,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) --- */
-        .app-header { background-color: #0e2a21 !important; }
-
-        /* --- CORREÇÃO DEFINITIVA DO LOGO NO HEADER --- */
-        .header-brand, .header-brand a {
-            display: flex !important;
-            align-items: center !important;
-            height: 100% !important;
-            background: transparent !important; 
-        }
-        
-        .header-logo {
-            height: 50px !important; 
-            width: auto !important;
-            border-radius: 0 !important; 
-            background: transparent !important; 
-            object-fit: contain !important;
-            margin-left: 15px !important;
-            padding: 0 !important; 
-            
-            filter: none !important;
-            -webkit-filter: none !important;
-            mix-blend-mode: normal !important;
-            box-shadow: none !important;
-        }
         .loading { color: #666; font-style: italic; }
         .btn-processar { background-color: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .btn-processar:hover { background-color: #1b5e20; }
@@ -53,25 +28,42 @@
         .btn-salvar:hover { background-color: #1565c0; }
         .upload-container { background-color: #e3f2fd; border: 2px dashed #1976d2; padding: 20px; border-radius: 8px; margin-top: 15px; text-align: center; }
         #status-pdf { font-weight: bold; margin-top: 10px; min-height: 20px; }
+
+        /* Estilo para o container da senha com o olhinho */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-container input {
+            width: 100%;
+            padding-right: 40px; /* Espaço para o ícone não sobrepor o texto */
+            box-sizing: border-box;
+        }
+        .password-container i {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #888;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+        .password-container i:hover {
+            color: #7b1fa2;
+        }
     </style>
 </head>
 <body class="dashboard-body">
 
-    <header class="app-header">
-        <div class="header-brand"><a href="dashboard.html"><img src="assets/logo.png" alt="Logo" class="header-logo"></a></div>
-        <nav class="header-nav">
-            <a href="dashboard.html" class="header-link">DASHBOARD</a>
-            <a href="apolice.html" class="header-link">APÓLICES</a>
-            <a href="registro.html" class="header-link active">USUÁRIOS</a>
-            <a href="relatorios.html" class="header-link">RELATÓRIOS</a>
-        </nav>
-        <div class="header-user-area">
-            <div class="user-info"><span class="user-name">Olá, <strong id="user-name-display">...</strong></span></div>
-            <button id="btn-logout" class="btn-logout-panel">SAIR</button>
-        </div>
-    </header>
+    <div id="sidebar-container"></div>
 
     <div class="main-container">
+        
+        <div class="screen-title" style="margin-bottom: 20px; border-left: 5px solid #7b1fa2; padding-left: 15px;">
+            <h2 style="color: #444; margin:0;" id="titulo-pagina-header">Gestão de Usuários</h2>
+            <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Adicione ou edite os acessos da sua equipe ao sistema.</p>
+        </div>
+
         <div style="margin-bottom: 20px;">
             <a href="dashboard.html" style="text-decoration: none; color: #666; font-size: 13px;">
                 <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
@@ -106,8 +98,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Senha de Acesso</label>
-                        <input type="password" id="senha" placeholder="******">
-                        <small id="dica-senha" style="color:#666; display:none;">Deixe em branco para manter a senha atual.</small>
+                        <div class="password-container">
+                            <input type="password" id="senha" placeholder="******">
+                            <i class="fas fa-eye" id="toggle-senha" title="Mostrar/Ocultar Senha"></i>
+                        </div>
+                        <small id="dica-senha" style="color:#666; display:none; margin-top: 5px;">Deixe em branco para manter a senha atual.</small>
                     </div>
                     <div class="form-group">
                         <label>Perfil de Acesso</label>
@@ -126,6 +121,8 @@
         </div>
         <div class="system-credits" style="text-align: center;">By Áidano Lima - ASL TECH</div>
     </div>
+
+    <script src="js/sidebar.js"></script>
 
     <script>
         const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
@@ -151,15 +148,25 @@
         if(document.getElementById('user-name-display') && nomeLogado) 
             document.getElementById('user-name-display').innerText = nomeLogado.split(' ')[0];
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            localStorage.clear(); window.location.href = 'index.html';
-        });
-
         if (!isMaster) {
             const selectTipo = document.getElementById('tipo');
             selectTipo.innerHTML = '<option value="padrao">Padrão (Visualizar)</option>';
             selectTipo.disabled = true; 
         }
+
+        // --- LÓGICA DO OLHINHO DA SENHA ---
+        document.getElementById('toggle-senha').addEventListener('click', function() {
+            const inputSenha = document.getElementById('senha');
+            if (inputSenha.type === 'password') {
+                inputSenha.type = 'text';
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                inputSenha.type = 'password';
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
+            }
+        });
 
         // --- PREVIEW DA FOTO LOCAL E BANCO ---
         let urlFotoSalva = null; 
@@ -179,6 +186,7 @@
 
         async function prepararModoEdicao() {
             document.getElementById('titulo-pagina').innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuário';
+            document.getElementById('titulo-pagina-header').innerText = 'Edição de Usuário'; 
             document.getElementById('btn-salvar').innerText = "SALVAR ALTERAÇÕES";
             document.getElementById('senha').required = false; 
             document.getElementById('senha').placeholder = "(Não alterada)";
@@ -229,12 +237,10 @@
                     if (!uploadRes.ok) {
                         throw new Error(uploadData.message || "Falha ao enviar a foto.");
                     }
-                    // Não precisamos pegar a URL aqui, pois a rota no server.js já salva no banco de dados!
                 }
 
                 Swal.fire({ title: 'Salvando dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-                // O campo foto foi removido do payload abaixo pois a rota de upload já cuidou de salvar no banco
                 const dados = {
                     nome: document.getElementById('nome').value,
                     email: document.getElementById('email').value,

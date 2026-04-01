@@ -19,35 +19,6 @@
     <script src="js/masks.js"></script> 
 
     <style>
-        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) E CORREÇÕES --- */
-        .app-header { background-color: #0e2a21 !important; }
-        
-        .header-link.active { border-bottom: 3px solid #4CB191 !important; color: #4CB191 !important; }
-        .header-link:hover { color: #4CB191 !important; }
-
-        /* --- CORREÇÃO DEFINITIVA DO LOGO NO HEADER --- */
-        .header-brand, .header-brand a {
-            display: flex !important;
-            align-items: center !important;
-            height: 100% !important;
-            background: transparent !important; 
-        }
-        
-        .header-logo {
-            height: 50px !important; 
-            width: auto !important;
-            border-radius: 0 !important; 
-            background: transparent !important; 
-            object-fit: contain !important;
-            margin-left: 15px !important;
-            padding: 0 !important; 
-            
-            filter: none !important;
-            -webkit-filter: none !important;
-            mix-blend-mode: normal !important;
-            box-shadow: none !important;
-        }
-        
         .loading { color: #666; font-style: italic; }
         
         /* Ajuste de Botões para a paleta verde */
@@ -66,19 +37,7 @@
 </head>
 <body class="dashboard-body">
 
-    <header class="app-header">
-        <div class="header-brand"><a href="dashboard.html"><img src="assets/logo.png" alt="Logo" class="header-logo"></a></div>
-        <nav class="header-nav">
-            <a href="dashboard.html" class="header-link">DASHBOARD</a>
-            <a href="apolice.html" class="header-link active">APÓLICES</a>
-            <a href="registro.html?origin=dashboard" class="header-link">USUÁRIOS</a>
-            <a href="relatorios.html" class="header-link">RELATÓRIOS</a>
-        </nav>
-        <div class="header-user-area">
-            <div class="user-info"><span class="user-name">Olá, <strong id="user-name-display">...</strong></span></div>
-            <button id="btn-logout" class="btn-logout-panel">SAIR</button>
-        </div>
-    </header>
+    <div id="sidebar-container"></div>
 
     <div class="main-container">
         <div style="margin-bottom: 20px; border-left: 5px solid #2e7d32; padding-left: 15px;">
@@ -146,6 +105,8 @@
         
         <div style="text-align:center; margin-top:20px; color:#999; font-size:12px;">ASL TECH SYSTEM</div>
     </div>
+
+    <script src="js/sidebar.js"></script>
 
     <script>
     (function() {
@@ -369,8 +330,6 @@
                 if(idEdicao) Swal.fire('Erro', 'Falha ao carregar dados da edição.', 'error');
             }
         })();
-
-        document.getElementById('btn-logout').addEventListener('click', () => { localStorage.clear(); window.location.href = 'index.html'; });
     })();
     </script>
 </body>
