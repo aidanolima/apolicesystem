@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <aside class="app-sidebar" id="app-sidebar">
             <div class="sidebar-header">
-                <img src="assets/logo.png" alt="Logo Apólice System" class="sidebar-logo">
+                <img src="assets/logo.png" onerror="this.src='assets/logo_apolicesystem.png'" alt="Logo Apólice System" class="sidebar-logo">
                 <div class="sidebar-title">APÓLICE SYSTEM</div>
             </div>
             
@@ -46,17 +46,24 @@ document.addEventListener("DOMContentLoaded", function() {
                 ${htmlNavLinks}
             </nav>
             
-            <div class="sidebar-footer">
-                <div class="sidebar-user-info">
-                    <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
-                    <div class="user-details">
-                        <span class="user-name">${primeiroNome}</span>
-                        <span class="user-role">${perfil}</span>
+            <div class="sidebar-footer" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); background-color: rgba(0,0,0,0.15);">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="user-avatar" style="font-size: 32px; color: #4CB191;">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-details" style="display: flex; flex-direction: column;">
+                            <span class="user-name" style="font-weight: bold; font-size: 14px; color: white;">${primeiroNome}</span>
+                            <span class="user-role" style="font-size: 11px; color: #aaa;">${perfil}</span>
+                        </div>
                     </div>
+
+                    <button id="btn-sidebar-logout" title="Sair do Sistema" style="background: transparent; border: none; color: #d32f2f; font-size: 18px; cursor: pointer; padding: 5px; transition: all 0.2s ease;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                    
                 </div>
-                <button id="btn-sidebar-logout" class="sidebar-logout">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
             </div>
         </aside>
         
@@ -67,6 +74,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const btnLogout = document.getElementById('btn-sidebar-logout');
     if (btnLogout) {
+        // Efeitos de Hover para o botão de sair (para não precisar mexer no CSS)
+        btnLogout.addEventListener('mouseover', () => {
+            btnLogout.style.color = '#ff5252';
+            btnLogout.style.transform = 'scale(1.15)';
+        });
+        btnLogout.addEventListener('mouseout', () => {
+            btnLogout.style.color = '#d32f2f';
+            btnLogout.style.transform = 'scale(1)';
+        });
+        
+        // Ação de Logout
         btnLogout.addEventListener('click', function() {
             localStorage.clear();
             sessionStorage.clear();
