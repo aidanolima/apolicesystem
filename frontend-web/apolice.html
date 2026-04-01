@@ -19,8 +19,11 @@
     <script src="js/masks.js"></script> 
 
     <style>
-        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) --- */
+        /* --- MUDANÇA GLOBAL DA BARRA PARA VERDE ESCURO (#0e2a21) E CORREÇÕES --- */
         .app-header { background-color: #0e2a21 !important; }
+        
+        .header-link.active { border-bottom: 3px solid #4CB191 !important; color: #4CB191 !important; }
+        .header-link:hover { color: #4CB191 !important; }
 
         /* --- CORREÇÃO DEFINITIVA DO LOGO NO HEADER --- */
         .header-brand, .header-brand a {
@@ -44,13 +47,21 @@
             mix-blend-mode: normal !important;
             box-shadow: none !important;
         }
+        
         .loading { color: #666; font-style: italic; }
+        
+        /* Ajuste de Botões para a paleta verde */
         .btn-processar { background-color: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .btn-processar:hover { background-color: #1b5e20; }
-        .btn-salvar { width: 100%; margin-top: 20px; padding: 15px; background-color: #1976d2; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        .btn-salvar:hover { background-color: #1565c0; }
-        .upload-container { background-color: #e3f2fd; border: 2px dashed #1976d2; padding: 20px; border-radius: 8px; margin-top: 15px; text-align: center; }
+        
+        .btn-salvar { width: 100%; margin-top: 20px; padding: 15px; background-color: #4CB191 !important; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: 0.3s;}
+        .btn-salvar:hover { background-color: #3a9678 !important; }
+        
+        .upload-container { background-color: #e8f5e9; border: 2px dashed #4CB191; padding: 20px; border-radius: 8px; margin-top: 15px; text-align: center; }
         #status-pdf { font-weight: bold; margin-top: 10px; min-height: 20px; }
+        
+        /* Ajuste de Labels e Bordas de Foco */
+        .form-control:focus, .campo-dado:focus, select:focus { border-color: #4CB191 !important; outline: none; box-shadow: 0 0 0 0.2rem rgba(76, 177, 145, 0.25) !important; }
     </style>
 </head>
 <body class="dashboard-body">
@@ -92,41 +103,41 @@
             </select>
 
             <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                <div style="flex: 1;"><label>Nº Apólice</label><input type="text" id="numero_apolice" class="campo-dado" style="width: 100%; padding: 10px;"></div>
-                <div style="flex: 1;"><label>Nº Proposta</label><input type="text" id="numero_proposta" class="campo-dado" style="width: 100%; padding: 10px;"></div>
+                <div style="flex: 1;"><label>Nº Apólice</label><input type="text" id="numero_apolice" class="campo-dado" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div>
+                <div style="flex: 1;"><label>Nº Proposta</label><input type="text" id="numero_proposta" class="campo-dado" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div>
             </div>
 
             <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                <div style="flex: 1;"><label>Início Vigência</label><input type="date" id="vigencia_inicio" class="campo-dado" style="width: 100%; padding: 10px;"></div>
-                <div style="flex: 1;"><label>Fim Vigência</label><input type="date" id="vigencia_fim" class="campo-dado" style="width: 100%; padding: 10px;"></div>
+                <div style="flex: 1;"><label>Início Vigência</label><input type="date" id="vigencia_inicio" class="campo-dado" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div>
+                <div style="flex: 1;"><label>Fim Vigência</label><input type="date" id="vigencia_fim" class="campo-dado" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div>
             </div>
 
             <h4 style="margin: 0 0 10px 0; color: #555;">Valores Financeiros</h4>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 120px;">
                     <label>Prêmio Líquido</label>
-                    <input type="text" id="premio_liquido" class="form-control mask-dinheiro" placeholder="R$ 0,00">
+                    <input type="text" id="premio_liquido" class="form-control mask-dinheiro" placeholder="R$ 0,00" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
                 </div>
                 <div style="flex: 1; min-width: 120px;">
                     <label style="color: #2e7d32; font-weight: bold;">Prêmio Total</label>                                
-                    <input type="text" id="premio_total" class="form-control mask-dinheiro" placeholder="R$ 0,00">
+                    <input type="text" id="premio_total" class="form-control mask-dinheiro" placeholder="R$ 0,00" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
                 </div>
                 <div style="flex: 1; min-width: 120px;">
                     <label>Franquia</label>
-                   <input type="text" id="franquia_casco" class="form-control mask-dinheiro" placeholder="R$ 0,00">
+                   <input type="text" id="franquia_casco" class="form-control mask-dinheiro" placeholder="R$ 0,00" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
                 </div>
                 
                 <div style="flex: 0 0 100px;"> 
-                    <label style="color: #1976d2; font-weight: bold; font-size:12px;">% Usada</label>
-                    <input type="number" id="porcentagem_comissao" class="form-control" placeholder="%" step="0.1" value="15">
+                    <label style="color: #4CB191; font-weight: bold; font-size:12px;">% Usada</label>
+                    <input type="number" id="porcentagem_comissao" class="form-control" placeholder="%" step="0.1" value="15" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
                 </div>
                 <div style="flex: 1; min-width: 100px;">
-                    <label style="color: #1976d2; font-weight: bold;">Valor Repasse (R$)</label>
-                    <input type="text" id="valor_repasse" class="form-control" placeholder="0,00">
+                    <label style="color: #4CB191; font-weight: bold;">Valor Repasse (R$)</label>
+                    <input type="text" id="valor_repasse" class="form-control" placeholder="0,00" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
                 </div>
                 <div style="flex: 1; min-width: 120px;">
-                    <label style="color: #1976d2; font-weight: bold;">Comissão Recebida (R$)</label>
-                    <input type="text" id="valor_comissao" class="form-control mask-dinheiro" placeholder="R$ 0,00" readonly style="background-color: #f9f9f9; font-weight:bold;">
+                    <label style="color: #4CB191; font-weight: bold;">Comissão Recebida (R$)</label>
+                    <input type="text" id="valor_comissao" class="form-control mask-dinheiro" placeholder="R$ 0,00" readonly style="background-color: #f9f9f9; font-weight:bold; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
                 </div>
             </div>
 
