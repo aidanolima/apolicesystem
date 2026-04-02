@@ -559,7 +559,12 @@ tbody tr:hover {
 .sidebar-overlay {
     display: none;
     position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
+    /* ESTRATÉGIA DE OURO PARA O OVERLAY: Amarra as 4 pontas em 0 */
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    
     background: rgba(0,0,0,0.5);
     z-index: 990;
     backdrop-filter: blur(2px);
