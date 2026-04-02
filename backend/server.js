@@ -17,7 +17,7 @@ console.log("⏳ Iniciando configurações do servidor...");
 
 const app = express();
 
-// 🚫 Middleware Anti-Cache Global para a API
+/// 🚫 Middleware Anti-Cache Global para a API
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
@@ -28,9 +28,9 @@ app.use((req, res, next) => {
 const port = process.env.PORT || 10000;
 const JWT_SECRET = process.env.JWT_SECRET || 'seguradora_chave_secreta_super_segura_2024';
 
-// ==================================================
-// ☁️ CONFIGURAÇÃO S3 (AWS) - BLINDADA
-// ==================================================
+/// ==================================================
+/// ☁️ CONFIGURAÇÃO S3 (AWS) - BLINDADA
+/// ==================================================
 let uploadS3; 
 let uploadMemory; 
 let s3Client; 
