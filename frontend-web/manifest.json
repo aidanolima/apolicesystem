@@ -1,7 +1,7 @@
 {
   "name": "Gestão de Clientes e Apólices",
-  "short_name": "Gestão Seguros",
-  "description": "Sistema completo para corretoras de seguros.",
+  "short_name": "Apolice System",
+  "description": "Sistema completo para corretores de seguros.",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#f5f7fa",
