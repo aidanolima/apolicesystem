@@ -39,6 +39,14 @@
     padding: 0;
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden; /* ISSO PROÍBE A TELA DE DESLIZAR PARA OS LADOS */
+}
+
 body {
     font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
     background-color: var(--bg-body);
@@ -615,4 +623,20 @@ tbody tr:hover {
     .form-row { flex-direction: column; gap: 10px; }
     .main-container { padding: 15px; padding-top: 90px; }
     h2 { font-size: 18px; }
+
+    /* MATA O VAZAMENTO DOS CARDS DE ESTATÍSTICA */
+    .stats-container {
+        gap: 10px; /* Reduz um pouco o espaço entre eles */
+    }
+    
+    .stat-card {
+        /* Força a matemática: metade da tela menos o espaço do meio. 
+           Assim, nunca vai estourar, não importa se o celular é estreito ou largo. */
+        min-width: calc(50% - 10px); 
+        padding: 15px 10px; /* Diminui um pouco as margens internas */
+    }
+
+    /* Reduz levemente as fontes apenas no mobile para caberem bonitas */
+    .stat-info h3 { font-size: 1.2em !important; }
+    .stat-card.money .stat-info h3 { font-size: 1.1em !important; }
 }
