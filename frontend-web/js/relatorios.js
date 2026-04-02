@@ -2,21 +2,8 @@
 const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
 let dadosParaExportacao = []; // Variável global para guardar o filtro atual
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Verifica e exibe usuário
-    const nome = localStorage.getItem('usuario_logado');
-    const tipo = localStorage.getItem('tipo_usuario');
-    if(nome) document.getElementById('user-name-display').innerText = nome.split(' ')[0];
-
-    // Botão Logout
-    const btnLogout = document.getElementById('btn-logout');
-    if(btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            localStorage.clear(); 
-            window.location.href = 'index.html';
-        });
-    }
-});
+// Nota: A lógica de carregar o nome do usuário e o botão de Logout foi removida daqui, 
+// pois o arquivo 'sidebar.js' já faz isso automaticamente em todas as páginas!
 
 // --- FUNÇÃO AUXILIAR DE CONVERSÃO ---
 function parseMoney(val) {
@@ -149,16 +136,15 @@ async function gerarRelatorio() {
                 totalValorComissao += vComissao;
 
                 // Cálculo Reverso da Porcentagem para exibição
-                // Comissão = (Líquido * %) + Repasse  ->  % = ((Comissão - Repasse) / Líquido) * 100
                 let percUsada = 0;
-                let baseCalculo = pLiquido > 0 ? pLiquido : pTotal; // Fallback se líquido for 0
+                let baseCalculo = pLiquido > 0 ? pLiquido : pTotal; 
 
                 if (baseCalculo > 0 && vComissao > 0) {
                     let comissaoBase = vComissao - vRepasse;
                     percUsada = (comissaoBase / baseCalculo) * 100;
-                    percUsada = Math.round(percUsada * 10) / 10; // Arredonda 1 casa
+                    percUsada = Math.round(percUsada * 10) / 10; 
                 }
-                if (percUsada < 0) percUsada = 0; // Evita negativo se repasse for maior que comissão (caso raro)
+                if (percUsada < 0) percUsada = 0; 
 
                 // Tratamento de Status
                 let badge = '<span class="badge" style="background:green; color:white;">VIGENTE</span>';
@@ -191,7 +177,7 @@ async function gerarRelatorio() {
             document.getElementById('box-total-comissao').style.display = 'block';
 
         } else {
-            // TABELA DE CLIENTES (Mantida Simples)
+            // TABELA DE CLIENTES
             thead.innerHTML = `<tr><th>Nome</th><th>CPF/CNPJ</th><th>Email</th><th>Telefone</th><th>Placa</th><th>Modelo</th></tr>`;
             titulo.innerText = `Relatório de Clientes (${filtrados.length})`;
             filtrados.forEach(d => {
@@ -224,10 +210,9 @@ function exportarExcel() {
     }
 
     const tipo = document.getElementById('tipo_relatorio').value;
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM para acentuação
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
 
     if (tipo === 'apolices') {
-        // Cabeçalho Expandido
         csvContent += "Numero Apolice;Cliente;Placa;Vigencia Fim;Premio Liquido;% Usada;Repasse;Comissao Final\n";
         
         dadosParaExportacao.forEach(row => {
@@ -236,7 +221,6 @@ function exportarExcel() {
             let vRepasse = parseMoney(row.valor_repasse);
             let vComissao = parseMoney(row.valor_comissao);
             
-            // Recalcula % para Excel
             let baseCalculo = pLiquido > 0 ? pLiquido : pTotal;
             let percUsada = 0;
             if (baseCalculo > 0 && vComissao > 0) {
@@ -245,14 +229,12 @@ function exportarExcel() {
                 percUsada = Math.round(percUsada * 10) / 10;
             }
 
-            // Formata Data
             let dataFim = row.vigencia_fim;
             if(row.vigencia_fim && row.vigencia_fim.includes('-')) {
                 const parts = row.vigencia_fim.split('T')[0].split('-');
                 dataFim = `${parts[2]}/${parts[1]}/${parts[0]}`;
             }
             
-            // Monta linha CSV
             let linha = [
                 row.numero_apolice || '',
                 row.cliente || '',
@@ -266,7 +248,6 @@ function exportarExcel() {
             csvContent += linha + "\n";
         });
     } else {
-        // Cabeçalho Clientes
         csvContent += "Nome;Documento;Email;Telefone;Placa;Modelo\n";
         dadosParaExportacao.forEach(row => {
             let linha = [
@@ -281,7 +262,6 @@ function exportarExcel() {
         });
     }
 
-    // Download
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -296,7 +276,6 @@ function atualizarFooter(qtd, totalPremios, totalComissoes) {
     document.getElementById('total-registros').innerText = qtd;
     document.getElementById('valor-total').innerText = totalPremios.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
     
-    // Novo campo de comissão
     const elComissao = document.getElementById('total-comissao');
     if(elComissao) {
         elComissao.innerText = totalComissoes.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});

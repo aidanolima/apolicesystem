@@ -536,13 +536,13 @@ tbody tr:hover {
    ========================================= */
 /* Botão Hambúrguer (Totalmente invisível no Desktop) */
 .mobile-toggle {
-    display: none; /* <-- Garante que ele SUMA na tela do computador */
+    display: none; 
     position: fixed;
-    top: 25px;    /* Descolado do topo */
-    right: 30px;  /* Descolado da direita */
-    left: auto !important;   /* Impede que ele vá para a esquerda */
+    top: 20px;    /* Distância segura do topo */
+    right: 20px;  /* Distância segura da direita */
+    left: auto !important;   
     z-index: 999;
-    background-color: var(--sidebar-bg); /* Fundo verde escuro */
+    background-color: var(--sidebar-bg); 
     color: white;
     border: none;
     padding: 10px 15px;
@@ -566,14 +566,13 @@ tbody tr:hover {
     .main-container { 
         margin-left: 0; 
         width: 100%; 
-        /* Joga o conteúdo para baixo para o botão não bater nos cards! */
-        padding-top: 90px; 
+        padding-top: 90px; /* Mantém os cards abaixo do botão */
     }
     
     .app-sidebar { 
-        left: 0 !important; /* Sidebar fixada na esquerda */
+        left: 0 !important; 
         right: auto !important; 
-        transform: translateX(-100%); /* Escondida para a esquerda */
+        transform: translateX(-100%); 
         top: 0 !important;
         bottom: 0 !important;
         height: 100% !important; 
@@ -582,12 +581,14 @@ tbody tr:hover {
     }
     
     .app-sidebar.open { 
-        transform: translateX(0); /* Desliza para dentro */
+        transform: translateX(0); 
     }
     
-    /* FAZ O BOTÃO APARECER APENAS NO MOBILE */
+    /* FAZ O BOTÃO APARECER APENAS NO MOBILE DE FORMA SEGURA */
     .mobile-toggle { 
         display: block !important; 
+        top: 20px !important;
+        right: 20px !important;
     }
     
     .sidebar-overlay.open { 
