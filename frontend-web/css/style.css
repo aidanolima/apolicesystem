@@ -33,18 +33,17 @@
     --sidebar-width: 260px;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+/* BLOQUEIO GLOBAL DE ROLAGEM HORIZONTAL */
 html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden; /* ISSO PROÍBE A TELA DE DESLIZAR PARA OS LADOS */
+    max-width: 100%;
+    overflow-x: hidden; 
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
@@ -66,17 +65,14 @@ body {
    ========================================= */
 body.dashboard-body {
     display: flex;
-    margin: 0;
-    padding: 0;
     min-height: 100vh;
-    background-color: #f4f6f9;
 }
 
 .main-container {
     flex: 1;
+    min-width: 0; /* A REGRA DE OURO QUE IMPEDE O VAZAMENTO PARA A ESQUERDA! */
     margin-left: var(--sidebar-width);
     padding: 20px 30px; 
-    width: calc(100vw - var(--sidebar-width) - 20px); 
     max-width: 100%;
     transition: all 0.3s ease;
     box-sizing: border-box;
@@ -91,6 +87,13 @@ body.dashboard-body {
     border: 1px solid var(--border-color);
     position: relative; 
     overflow: hidden;
+    width: 100%; /* Garante que o card respeite o container */
+}
+
+/* Trava para Gráficos não explodirem os cards */
+canvas {
+    max-width: 100% !important;
+    height: auto !important;
 }
 
 h2 {
@@ -544,14 +547,14 @@ tbody tr:hover {
 }
 
 /* =========================================
-   11. MOBILE (SIDEBAR NA ESQUERDA, BOTÃO NA DIREITA)
+   11. MOBILE E RESPONSIVIDADE
    ========================================= */
 /* Botão Hambúrguer (Totalmente invisível no Desktop) */
 .mobile-toggle {
     display: none; 
     position: fixed;
-    top: 20px;    /* Distância segura do topo */
-    right: 20px;  /* Distância segura da direita */
+    top: 20px;    
+    right: 20px;  
     left: auto !important;   
     z-index: 999;
     background-color: var(--sidebar-bg); 
@@ -564,21 +567,20 @@ tbody tr:hover {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
+/* Overlay Tela Inteira (Sem bordas brancas) */
 .sidebar-overlay {
     display: none;
     position: fixed;
-    /* ESTRATÉGIA DE OURO PARA O OVERLAY: Amarra as 4 pontas em 0 */
     top: 0; 
     left: 0; 
     right: 0; 
     bottom: 0;
-    
     background: rgba(0,0,0,0.5);
     z-index: 990;
     backdrop-filter: blur(2px);
 }
 
-/* Regras aplicadas APENAS quando a tela diminui (Celular/Tablet) */
+/* Regras para Celular e Tablet */
 @media (max-width: 992px) {
     .main-container { 
         margin-left: 0; 
@@ -586,14 +588,13 @@ tbody tr:hover {
         padding-top: 90px; /* Mantém os cards abaixo do botão */
     }
     
-    /* ESTRATÉGIA DE OURO: Fixação Absoluta com 100% */
     .app-sidebar { 
         position: fixed !important;
         left: 0 !important; 
         right: auto !important; 
         top: 0 !important;
         bottom: 0 !important;
-        height: 100% !important; /* Salva o menu das quebras da barra de URL */
+        height: 100% !important; 
         max-height: 100% !important;
         transform: translateX(-100%); 
         box-shadow: 4px 0 15px rgba(0,0,0,0.3); 
@@ -606,7 +607,6 @@ tbody tr:hover {
         transform: translateX(0); 
     }
     
-    /* FAZ O BOTÃO APARECER APENAS NO MOBILE DE FORMA SEGURA */
     .mobile-toggle { 
         display: block !important; 
         top: 20px !important;
@@ -618,25 +618,32 @@ tbody tr:hover {
     }
 }
 
-/* Ajustes finais para celulares menores */
+/* Ajustes Finais para Celulares (Bloqueando Quebras) */
 @media (max-width: 768px) {
     .form-row { flex-direction: column; gap: 10px; }
-    .main-container { padding: 15px; padding-top: 90px; }
+    
+    .main-container { 
+        padding: 15px; 
+        padding-top: 90px; 
+        overflow-x: hidden; /* Força o bloqueio de rolagem no container pai */
+    }
     h2 { font-size: 18px; }
 
-    /* MATA O VAZAMENTO DOS CARDS DE ESTATÍSTICA */
+    .card {
+        padding: 15px; /* Reduz o "gordura" interna do card para liberar espaço */
+    }
+
+    /* Trava os cards de estatística para não estourarem a tela */
     .stats-container {
-        gap: 10px; /* Reduz um pouco o espaço entre eles */
+        gap: 10px; 
     }
     
     .stat-card {
-        /* Força a matemática: metade da tela menos o espaço do meio. 
-           Assim, nunca vai estourar, não importa se o celular é estreito ou largo. */
-        min-width: calc(50% - 10px); 
-        padding: 15px 10px; /* Diminui um pouco as margens internas */
+        min-width: calc(50% - 10px); /* Sempre caberão 2 cards perfeitos, independente do celular */
+        padding: 15px 10px; 
     }
 
-    /* Reduz levemente as fontes apenas no mobile para caberem bonitas */
+    /* Reduz levemente o texto no celular para não empurrar bordas */
     .stat-info h3 { font-size: 1.2em !important; }
     .stat-card.money .stat-info h3 { font-size: 1.1em !important; }
 }
