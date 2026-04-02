@@ -195,9 +195,12 @@
                 document.getElementById('email').value = user.email;
                 
                 if (user.foto_perfil) {
-                    urlFotoSalva = user.foto_perfil;
-                    document.getElementById('preview-foto').src = urlFotoSalva;
-                }
+    // Se a foto for um caminho local (começa com /), cola a URL do backend antes. 
+    // Se já for um link da S3 (começa com http), deixa como está.
+    urlFotoSalva = user.foto_perfil.startsWith('/') ? BASE_API + user.foto_perfil : user.foto_perfil;
+    
+    document.getElementById('preview-foto').src = urlFotoSalva;
+}
                 if (isMaster) document.getElementById('tipo').value = user.tipo;
 
             } catch (error) { Swal.fire('Erro', 'Não foi possível carregar os dados.', 'error'); }
