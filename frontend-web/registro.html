@@ -119,159 +119,151 @@
     <script src="js/sidebar.js"></script>
 
     <script>
-        const BASE_API = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
-        const token = localStorage.getItem('token');
-        const tipoUsuarioLogado = localStorage.getItem('tipo_usuario'); 
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const idEdicao = urlParams.get('id');
-
-        if (!token) window.location.href = 'index.html';
-
-        const isMaster = (tipoUsuarioLogado === 'admin' || tipoUsuarioLogado === 'ti');
-
-        if (!isMaster && !idEdicao) {
-            Swal.fire({
-                icon: 'warning', title: 'Acesso Restrito', text: 'Seu perfil permite apenas editar seus próprios dados.',
-                confirmButtonColor: '#7b1fa2', confirmButtonText: 'Voltar ao Painel', allowOutsideClick: false
-            }).then(() => { window.location.href = 'dashboard.html'; });
-            throw new Error("Acesso negado.");
-        }
-        
-        const nomeLogado = localStorage.getItem('usuario_logado');
-        if(document.getElementById('user-name-display') && nomeLogado) 
-            document.getElementById('user-name-display').innerText = nomeLogado.split(' ')[0];
-
-        if (!isMaster) {
-            const selectTipo = document.getElementById('tipo');
-            selectTipo.innerHTML = '<option value="padrao">Padrão (Visualizar)</option>';
-            selectTipo.disabled = true; 
-        }
-
-        // --- LÓGICA DO OLHINHO DA SENHA ---
-        document.getElementById('toggle-senha').addEventListener('click', function() {
-            const inputSenha = document.getElementById('senha');
-            if (inputSenha.type === 'password') {
-                inputSenha.type = 'text';
-                this.classList.remove('fa-eye');
-                this.classList.add('fa-eye-slash');
-            } else {
-                inputSenha.type = 'password';
-                this.classList.remove('fa-eye-slash');
-                this.classList.add('fa-eye');
-            }
-        });
-
-        // --- PREVIEW DA FOTO LOCAL E BANCO ---
-        let urlFotoSalva = null; 
-        const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>";
-
-        document.getElementById('foto-perfil').addEventListener('change', function(e) {
-            const preview = document.getElementById('preview-foto');
-            const file = e.target.files[0];
-            if (file) {
-                preview.src = URL.createObjectURL(file);
-            } else {
-                preview.src = urlFotoSalva ? urlFotoSalva : placeholderImg;
-            }
-        });
-
-        if (idEdicao) prepararModoEdicao();
-
-        async function prepararModoEdicao() {
-            document.getElementById('titulo-pagina').innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuário';
-            document.getElementById('titulo-pagina-header').innerText = 'Edição de Usuário'; 
-            document.getElementById('btn-salvar').innerText = "SALVAR ALTERAÇÕES";
-            document.getElementById('senha').required = false; 
-            document.getElementById('senha').placeholder = "(Não alterada)";
-            document.getElementById('dica-senha').style.display = 'block';
-
-            try {
-                const res = await fetch(`${BASE_API}/usuarios/${idEdicao}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if(!res.ok) throw new Error("Erro ao buscar usuário");
-                const user = await res.json();
-                
-                document.getElementById('nome').value = user.nome;
-                document.getElementById('email').value = user.email;
-                
-                if (user.foto_perfil) {
-    // Se a foto for um caminho local (começa com /), cola a URL do backend antes. 
-    // Se já for um link da S3 (começa com http), deixa como está.
-    urlFotoSalva = user.foto_perfil.startsWith('/') ? BASE_API + user.foto_perfil : user.foto_perfil;
+    // ✅ CORREÇÃO 1: Nome da variável alinhado com o config.js
+    const BASE_API = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'https://seguradoraproject.onrender.com';
+    const token = localStorage.getItem('token');
+    const tipoUsuarioLogado = localStorage.getItem('tipo_usuario'); 
     
-    document.getElementById('preview-foto').src = urlFotoSalva;
-}
-                if (isMaster) document.getElementById('tipo').value = user.tipo;
+    const urlParams = new URLSearchParams(window.location.search);
+    const idEdicao = urlParams.get('id');
 
-            } catch (error) { Swal.fire('Erro', 'Não foi possível carregar os dados.', 'error'); }
+    if (!token) window.location.href = 'index.html';
+
+    const isMaster = (tipoUsuarioLogado === 'admin' || tipoUsuarioLogado === 'ti');
+
+    if (!isMaster && !idEdicao) {
+        Swal.fire({
+            icon: 'warning', title: 'Acesso Restrito', text: 'Seu perfil permite apenas editar seus próprios dados.',
+            confirmButtonColor: '#7b1fa2', confirmButtonText: 'Voltar ao Painel', allowOutsideClick: false
+        }).then(() => { window.location.href = 'dashboard.html'; });
+        throw new Error("Acesso negado.");
+    }
+    
+    const nomeLogado = localStorage.getItem('usuario_logado');
+    if(document.getElementById('user-name-display') && nomeLogado) 
+        document.getElementById('user-name-display').innerText = nomeLogado.split(' ')[0];
+
+    if (!isMaster) {
+        const selectTipo = document.getElementById('tipo');
+        selectTipo.innerHTML = '<option value="padrao">Padrão (Visualizar)</option>';
+        selectTipo.disabled = true; 
+    }
+
+    // --- LÓGICA DO OLHINHO DA SENHA ---
+    document.getElementById('toggle-senha').addEventListener('click', function() {
+        const inputSenha = document.getElementById('senha');
+        if (inputSenha.type === 'password') {
+            inputSenha.type = 'text';
+            this.classList.remove('fa-eye');
+            this.classList.add('fa-eye-slash');
+        } else {
+            inputSenha.type = 'password';
+            this.classList.remove('fa-eye-slash');
+            this.classList.add('fa-eye');
         }
+    });
 
-        document.getElementById('form-registro').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btnSalvar = document.getElementById('btn-salvar');
-            const textoOriginal = btnSalvar.innerText;
-            btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-            btnSalvar.disabled = true;
+    // --- PREVIEW DA FOTO LOCAL E BANCO ---
+    let urlFotoSalva = null; 
+    const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>";
 
-            try {
-                const inputFoto = document.getElementById('foto-perfil');
+    document.getElementById('foto-perfil').addEventListener('change', function(e) {
+        const preview = document.getElementById('preview-foto');
+        const file = e.target.files[0];
+        if (file) {
+            preview.src = URL.createObjectURL(file);
+        } else {
+            preview.src = urlFotoSalva ? urlFotoSalva : placeholderImg;
+        }
+    });
 
-                // Envia a foto SE o usuário selecionou um arquivo
-                if (inputFoto.files.length > 0) {
-                    Swal.fire({ title: 'Enviando foto...', text: 'Aguarde...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    
-                    const formData = new FormData();
-                    formData.append('foto', inputFoto.files[0]);
-                    
-                    // CORREÇÃO: Informar ao Backend qual usuário está recebendo a foto
-                    if (idEdicao) {
-                        formData.append('usuario_id', idEdicao); 
-                    }
+    if (idEdicao) prepararModoEdicao();
 
-                    const uploadRes = await fetch(`${BASE_API}/api/upload-perfil`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        body: formData
-                    });
+    async function prepararModoEdicao() {
+        document.getElementById('titulo-pagina').innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuário';
+        document.getElementById('titulo-pagina-header').innerText = 'Edição de Usuário'; 
+        document.getElementById('btn-salvar').innerText = "SALVAR ALTERAÇÕES";
+        document.getElementById('senha').required = false; 
+        document.getElementById('senha').placeholder = "(Não alterada)";
+        document.getElementById('dica-senha').style.display = 'block';
 
-                    const uploadData = await uploadRes.json();
-                    if (!uploadRes.ok) {
-                        throw new Error(uploadData.message || "Falha ao enviar a foto.");
-                    }
-                }
+        try {
+            const res = await fetch(`${BASE_API}/usuarios/${idEdicao}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if(!res.ok) throw new Error("Erro ao buscar usuário");
+            const user = await res.json();
+            
+            document.getElementById('nome').value = user.nome;
+            document.getElementById('email').value = user.email;
+            
+            // ✅ CORREÇÃO 2: Lógica robusta para a foto
+            if (user.foto_perfil && user.foto_perfil !== 'null' && user.foto_perfil.trim() !== '') {
+                urlFotoSalva = user.foto_perfil.startsWith('/') ? BASE_API + user.foto_perfil : user.foto_perfil;
+                document.getElementById('preview-foto').src = urlFotoSalva;
+            }
+            
+            if (isMaster) document.getElementById('tipo').value = user.tipo;
 
-                Swal.fire({ title: 'Salvando dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        } catch (error) { Swal.fire('Erro', 'Não foi possível carregar os dados.', 'error'); }
+    }
 
-                const dados = {
-                    nome: document.getElementById('nome').value,
-                    email: document.getElementById('email').value,
-                    senha: document.getElementById('senha').value,
-                    tipo: document.getElementById('tipo').value
-                };
+    document.getElementById('form-registro').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSalvar = document.getElementById('btn-salvar');
+        const textoOriginal = btnSalvar.innerText;
+        btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        btnSalvar.disabled = true;
 
-                const endpoint = idEdicao ? `${BASE_API}/usuarios/${idEdicao}` : `${BASE_API}/registrar`;
-                const method = idEdicao ? 'PUT' : 'POST';
+        try {
+            const inputFoto = document.getElementById('foto-perfil');
 
-                const res = await fetch(endpoint, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(dados)
+            // ✅ SE O USUÁRIO ESCOLHER UMA FOTO, FAZ O UPLOAD
+            if (inputFoto.files.length > 0) {
+                Swal.fire({ title: 'Enviando foto...', text: 'Aguarde...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                const formData = new FormData();
+                formData.append('foto', inputFoto.files[0]);
+                if (idEdicao) { formData.append('usuario_id', idEdicao); }
+
+                const uploadRes = await fetch(`${BASE_API}/api/upload-perfil`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
                 });
 
-                if (res.ok) {
-                    await Swal.fire('Sucesso!', idEdicao ? 'Dados atualizados.' : 'Usuário cadastrado.', 'success');
-                    window.location.href = 'dashboard.html';
-                } else {
-                    const err = await res.json();
-                    throw new Error(err.message);
-                }
-            } catch (error) {
-                Swal.fire('Erro', error.message, 'error');
-            } finally {
-                btnSalvar.innerHTML = textoOriginal;
-                btnSalvar.disabled = false;
+                const uploadData = await uploadRes.json();
+                if (!uploadRes.ok) throw new Error(uploadData.message || "Falha ao enviar a foto.");
             }
-        });
-    </script>
-</body>
-</html>
+
+            Swal.fire({ title: 'Salvando dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            const dados = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                senha: document.getElementById('senha').value,
+                tipo: document.getElementById('tipo').value
+            };
+
+            const endpoint = idEdicao ? `${BASE_API}/usuarios/${idEdicao}` : `${BASE_API}/registrar`;
+            const method = idEdicao ? 'PUT' : 'POST';
+
+            const res = await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(dados)
+            });
+
+            if (res.ok) {
+                await Swal.fire('Sucesso!', idEdicao ? 'Dados atualizados.' : 'Usuário cadastrado.', 'success');
+                window.location.href = 'dashboard.html';
+            } else {
+                const err = await res.json();
+                throw new Error(err.message);
+            }
+        } catch (error) {
+            Swal.fire('Erro', error.message, 'error');
+        } finally {
+            btnSalvar.innerHTML = textoOriginal;
+            btnSalvar.disabled = false;
+        }
+    });
+</script>
