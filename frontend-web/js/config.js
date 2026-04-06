@@ -5,10 +5,12 @@ const isLocal = window.location.hostname === '127.0.0.1' || window.location.host
 
 const CONFIG = {
     development: {
+        // Mantém o seu DEV local rodando perfeitamente como sempre foi!
         API_BASE_URL: 'http://localhost:3000', 
     },
     production: {
-        API_BASE_URL: 'https://seguradoraproject.onrender.com', 
+        // 👇 A MUDANÇA É AQUI: O Apólice System de produção agora fala com o motor do próprio Apólice System!
+        API_BASE_URL: 'https://apolicesystem.onrender.com', 
     }
 };
 
