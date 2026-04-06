@@ -1,7 +1,7 @@
 /// ==================================================
 /// 1. CONFIGURAÇÕES GLOBAIS E ESTADO
 /// ==================================================
-const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
+///const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
 const ITENS_POR_PAGINA = 5; 
 const TEMPO_INATIVIDADE_MINUTOS = 15; 
 

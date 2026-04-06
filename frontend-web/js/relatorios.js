@@ -1,5 +1,5 @@
 // --- 1. CONFIGURAÇÃO IGUAL AO DASHBOARD ---
-const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
+//const API_BASE_URL = (typeof API_URL !== 'undefined') ? API_URL : 'https://seguradoraproject.onrender.com';
 let dadosParaExportacao = []; // Variável global para guardar o filtro atual
 
 // Nota: A lógica de carregar o nome do usuário e o botão de Logout foi removida daqui, 
