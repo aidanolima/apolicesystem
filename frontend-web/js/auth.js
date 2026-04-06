@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
             try {
                 // Tenta conectar no servidor local (localhost:3000)
                 // A variável API_URL vem do arquivo config.js
-                const response = await fetch(`${API_URL}/login`, {
+                const response = await fetch(`${API_BASE_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, senha })

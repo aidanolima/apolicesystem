@@ -257,10 +257,10 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-            console.log("Tentando conectar em:", `${BASE_API}/forgot-password`);
+            console.log("Tentando conectar em:", `${API_BASE_URL}/forgot-password`);
 
             try {
-                const response = await fetch(`${BASE_API}/forgot-password`, {
+                const response = await fetch(`${API_BASE_URL}/forgot-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email })

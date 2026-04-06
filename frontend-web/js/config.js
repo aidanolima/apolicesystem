@@ -13,9 +13,9 @@ const CONFIG = {
 };
 
 // 2. DEFINIÇÃO GLOBAL DA API (A Mágica acontece aqui)
-// Isso escolhe qual URL usar baseada no ambiente
-const API_URL = isLocal ? CONFIG.development.API_BASE_URL : CONFIG.production.API_BASE_URL;
+// Ajustado para API_BASE_URL para manter o padrão em todo o sistema!
+const API_BASE_URL = isLocal ? CONFIG.development.API_BASE_URL : CONFIG.production.API_BASE_URL;
 
 // 3. LOG PARA DEBUG (Para você saber onde está rodando)
 console.log(`[Ambiente] Rodando em: ${isLocal ? 'DESENVOLVIMENTO (Local)' : 'PRODUÇÃO (Nuvem)'}`);
-console.log(`[API] Conectando em: ${API_URL}`);
+console.log(`[API] Conectando em: ${API_BASE_URL}`);
