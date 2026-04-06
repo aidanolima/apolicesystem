@@ -65,7 +65,7 @@ if (hasAwsKeys) {
         uploadMemory = multer({ storage: multer.memoryStorage() });
         console.log("✅ AWS S3 Configurado com sucesso!");
     } catch (err) {
-        console.error("❌ Erro ao configurar AWS S3:", err.message);
+        console.error("❌ Erro ao configurar AWS S3. Verifique as credenciais:", err.message);
         usarArmazenamentoLocal();
     }
 } else {
