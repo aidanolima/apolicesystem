@@ -553,18 +553,23 @@ tbody tr:hover {
 .mobile-toggle {
     display: none; 
     position: fixed;
-    top: 20px;    
+    top: 25px;    
     right: 20px;  
     left: auto !important;   
     z-index: 999;
-    background-color: var(--sidebar-bg); 
-    color: white;
+    background: transparent; 
+    color: var(--primary-color);
     border: none;
-    padding: 10px 15px;
-    border-radius: 6px;
+    padding: 0;
     cursor: pointer;
-    font-size: 22px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    font-size: 28px;
+    box-shadow: none;
+    outline: none;
+    transition: transform 0.2s ease;
+}
+
+.mobile-toggle:active {
+    transform: scale(0.9);
 }
 
 /* Overlay Tela Inteira (Sem bordas brancas) */
@@ -630,7 +635,19 @@ tbody tr:hover {
     h2 { font-size: 18px; }
 
     .card {
-        padding: 15px; /* Reduz o "gordura" interna do card para liberar espaço */
+        padding: 15px; 
+    }
+
+    /* Trava os cards de gráficos para não estourarem a tela */
+    .charts-container {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .chart-card {
+        padding: 15px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     /* Trava os cards de estatística para não estourarem a tela */
