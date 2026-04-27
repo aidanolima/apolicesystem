@@ -5,8 +5,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const token = localStorage.getItem('token');
     const userNome = localStorage.getItem('usuario_logado');
     const userTipo = localStorage.getItem('tipo_usuario');
+    const userFoto = localStorage.getItem('foto_perfil');
 
     if (!token) return;
+
+    const BASE_API = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : '';
 
     const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
 
@@ -31,6 +34,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const perfil = userTipo ? userTipo.toUpperCase() : 'USER';
     const primeiroNome = userNome ? userNome.split(' ')[0] : 'Usuário';
 
+    // Resolver a URL da foto
+    let userAvatarHtml = '<i class="fas fa-user-circle"></i>';
+    if (userFoto && userFoto !== 'null' && userFoto.trim() !== '') {
+        const fullFotoUrl = userFoto.startsWith('/') ? BASE_API + userFoto : userFoto;
+        userAvatarHtml = `<img src="${fullFotoUrl}" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #4CB191;">`;
+    }
+
     const htmlSidebar = `
         <button class="mobile-toggle" id="btn-mobile-toggle">
             <i class="fas fa-bars"></i>
@@ -50,8 +60,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div class="user-avatar" style="font-size: 32px; color: #4CB191;">
-                            <i class="fas fa-user-circle"></i>
+                        <div class="user-avatar" style="font-size: 32px; color: #4CB191; display: flex; align-items: center; justify-content: center;">
+                            ${userAvatarHtml}
                         </div>
                         <div class="user-details" style="display: flex; flex-direction: column;">
                             <span class="user-name" style="font-weight: bold; font-size: 14px; color: white;">${primeiroNome}</span>

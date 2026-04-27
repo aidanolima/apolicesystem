@@ -236,6 +236,12 @@
 
                 const uploadData = await uploadRes.json();
                 if (!uploadRes.ok) throw new Error(uploadData.message || "Falha ao enviar a foto.");
+
+                // ✅ Se o usuário editado for o mesmo logado, atualiza o localStorage
+                const usuarioLogadoId = localStorage.getItem('usuario_id');
+                if (uploadData.url && (!idEdicao || idEdicao == usuarioLogadoId)) {
+                    localStorage.setItem('foto_perfil', uploadData.url);
+                }
             }
 
             Swal.fire({ title: 'Salvando dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });

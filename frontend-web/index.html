@@ -314,8 +314,10 @@
 
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
+                    localStorage.setItem('usuario_id', data.usuario.id);
                     localStorage.setItem('usuario_logado', data.usuario.nome);
                     localStorage.setItem('tipo_usuario', data.usuario.tipo);
+                    localStorage.setItem('foto_perfil', data.usuario.foto_perfil || '');
                     
                     const Toast = Swal.mixin({
                         toast: true, position: 'top-end', showConfirmButton: false, timer: 1000

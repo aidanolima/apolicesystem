@@ -207,7 +207,7 @@ app.post('/login', async (req, res) => {
         if (senha !== usuario.senha) return res.status(401).json({ message: "Senha incorreta." });
         
         const token = jwt.sign({ id: usuario.id, email: usuario.email, tipo: usuario.tipo }, JWT_SECRET, { expiresIn: '24h' });
-        res.json({ auth: true, token: token, usuario: { nome: usuario.nome, tipo: usuario.tipo } });
+        res.json({ auth: true, token: token, usuario: { id: usuario.id, nome: usuario.nome, tipo: usuario.tipo, foto_perfil: usuario.foto_perfil } });
     } catch (error) { res.status(500).json({ message: "Erro interno." }); }
 });
 
