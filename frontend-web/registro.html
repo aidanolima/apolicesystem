@@ -119,8 +119,8 @@
     <script src="js/sidebar.js"></script>
 
     <script>
-    // CORRECAO 1: Nome da variavel alinhado com o config.js
-    const BASE_API = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'https://seguradoraproject.onrender.com';
+    // CORREÇÃO 1: Nome da variável alinhado com o config.js e fallback atualizado para a casa nova
+    const BASE_API = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'https://apolicesystem.onrender.com';
     const token = localStorage.getItem('token');
     const tipoUsuarioLogado = localStorage.getItem('tipo_usuario'); 
     
@@ -140,8 +140,9 @@
     }
     
     const nomeLogado = localStorage.getItem('usuario_logado');
-    if(document.getElementById('user-name-display') && nomeLogado) 
+    if(document.getElementById('user-name-display') && nomeLogado) {
         document.getElementById('user-name-display').innerText = nomeLogado.split(' ')[0];
+    }
 
     if (!isMaster) {
         const selectTipo = document.getElementById('tipo');
@@ -180,22 +181,22 @@
     if (idEdicao) prepararModoEdicao();
 
     async function prepararModoEdicao() {
-        document.getElementById('titulo-pagina').innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuario';
-        document.getElementById('titulo-pagina-header').innerText = 'Edicao de Usuario'; 
-        document.getElementById('btn-salvar').innerText = "SALVAR ALTERACOES";
+        document.getElementById('titulo-pagina').innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuário';
+        document.getElementById('titulo-pagina-header').innerText = 'Edição de Usuário'; 
+        document.getElementById('btn-salvar').innerText = "SALVAR ALTERAÇÕES";
         document.getElementById('senha').required = false; 
-        document.getElementById('senha').placeholder = "(Nao alterada)";
+        document.getElementById('senha').placeholder = "(Não alterada)";
         document.getElementById('dica-senha').style.display = 'block';
 
         try {
             const res = await fetch(`${BASE_API}/usuarios/${idEdicao}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if(!res.ok) throw new Error("Erro ao buscar usuario");
+            if(!res.ok) throw new Error("Erro ao buscar usuário");
             const user = await res.json();
             
             document.getElementById('nome').value = user.nome;
             document.getElementById('email').value = user.email;
             
-            // Logica para a foto
+            // Lógica para a foto
             if (user.foto_perfil && user.foto_perfil !== 'null' && user.foto_perfil.trim() !== '') {
                 urlFotoSalva = user.foto_perfil.startsWith('/') ? BASE_API + user.foto_perfil : user.foto_perfil;
                 document.getElementById('preview-foto').src = urlFotoSalva;
@@ -205,7 +206,7 @@
 
         } catch (error) { 
             console.error("Erro ao carregar dados:", error);
-            Swal.fire('Erro', 'Nao foi possivel carregar os dados.', 'error'); 
+            Swal.fire('Erro', 'Não foi possível carregar os dados.', 'error'); 
         }
     }
 
@@ -219,7 +220,7 @@
         try {
             const inputFoto = document.getElementById('foto-perfil');
 
-            // SE O USUARIO ESCOLHER UMA FOTO, FAZ O UPLOAD
+            // SE O USUÁRIO ESCOLHER UMA FOTO, FAZ O UPLOAD
             if (inputFoto.files.length > 0) {
                 Swal.fire({ title: 'Enviando foto...', text: 'Aguarde...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 
@@ -256,7 +257,7 @@
             });
 
             if (res.ok) {
-                await Swal.fire('Sucesso!', idEdicao ? 'Dados atualizados.' : 'Usuario cadastrado.', 'success');
+                await Swal.fire('Sucesso!', idEdicao ? 'Dados atualizados.' : 'Usuário cadastrado.', 'success');
                 window.location.href = 'dashboard.html';
             } else {
                 const err = await res.json();
@@ -269,4 +270,6 @@
             btnSalvar.disabled = false;
         }
     });
-</script>
+    </script>
+</body>
+</html>
